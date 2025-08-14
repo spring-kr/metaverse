@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏢 비즈니스 구역 - 도깨비 메타버스</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            overflow: hidden;
+        }
+        
+        #business-canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            cursor: crosshair;
+        }
+        
+        /* 메인 UI 컨테이너 */
+        .ui-container {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        
+        .ui-container > * {
+            pointer-events: auto;
+        }
+        
+        /* 상태 표시 */
+        .status-display {
+            background: rgba(52, 73, 94, 0.9);
+            border: 2px solid #3498db;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        /* 컨트롤 패널 */
+        .control-panel {
+            background: rgba(52, 73, 94, 0.95);
+            border: 2px solid #3498db;
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+            min-width: 300px;
+        }
+        
+        .control-btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            padding: 12px 16px;
+            margin: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+        
+        /* 뒤로가기 버튼 */
+        .back-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1001;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            padding: 15px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+        
+        /* 비즈니스 도깨비 카드 */
+        .business-goblin-card {
+            background: rgba(44, 62, 80, 0.9);
+            border: 2px solid #3498db;
+            border-radius: 15px;
+            padding: 15px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .business-goblin-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+            border-color: #5dade2;
+        }
+        
+        .goblin-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 8px;
+        }
+        
+        .goblin-specialty {
+            font-size: 14px;
+            color: #85c1e9;
+            margin-bottom: 5px;
+        }
+
+        /* 🏢 비즈니스 채팅 시스템 */
+        .chat-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 350px;
+            height: 500px;
+            background: linear-gradient(135deg, rgba(44, 62, 80, 0.95), rgba(52, 152, 219, 0.95));
+            border: 2px solid #3498db;
+            border-radius: 15px;
+            display: none;
+            flex-direction: column;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 10px 30px rgba(52, 152, 219, 0.3);
+            z-index: 1000;
+        }
+
+        .chat-header {
+            background: linear-gradient(90deg, #2c3e50, #3498db);
+            color: white;
+            padding: 15px;
+            border-radius: 13px 13px 0 0;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .chat-close {
+            background: none;
+            border: none;
+            color: #3498db;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .chat-close:hover {
+            background: rgba(52, 152, 219, 0.2);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: rgba(44, 62, 80, 0.8);
+        }
+
+        .message {
+            margin: 10px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .message.user-message {
+            flex-direction: row-reverse;
+        }
+
+        .message .avatar {
+            min-width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3498db, #5dade2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .message.user-message .avatar {
+            background: linear-gradient(135deg, #2980b9, #74b9ff);
+        }
+
+        .message .text {
+            background: rgba(52, 152, 219, 0.3);
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 250px;
+            word-wrap: break-word;
+            border: 1px solid rgba(52, 152, 219, 0.3);
+            color: #ecf0f1;
+        }
+
+        .message.user-message .text {
+            background: rgba(74, 144, 226, 0.3);
+            border-color: rgba(93, 173, 226, 0.3);
+        }
+
+        .chat-input-container {
+            padding: 15px;
+            border-top: 1px solid rgba(52, 152, 219, 0.3);
+            background: rgba(44, 62, 80, 0.9);
+            border-radius: 0 0 13px 13px;
+        }
+
+        .chat-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #3498db;
+            border-radius: 20px;
+            background: rgba(44, 62, 80, 0.8);
+            color: #ecf0f1;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: #5dade2;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
+        }
+
+        .chat-input::placeholder {
+            color: #85c1e9;
+        }
+    </style>
+</head>
+<body>
+    <!-- 뒤로가기 버튼 -->
+    <button class="back-btn" onclick="goBackToVillage()">← 🏘️ 도깨비 마을로</button>
+    
+    <!-- 메인 캔버스 -->
+    <canvas id="business-canvas"></canvas>
+    
+    <!-- UI 컨테이너 -->
+    <div class="ui-container">
+        <!-- 상태 표시 -->
+        <div class="status-display" id="statusDisplay">
+            🏢 비즈니스 구역에 오신 것을 환영합니다!
+        </div>
+        
+        <!-- 🏢 채팅 시스템 -->
+        <div class="chat-container" id="chatContainer">
+            <div class="chat-header">
+                <span id="chatTitle">🏢 비즈니스 도깨비와의 대화</span>
+                <button class="chat-close" onclick="closeChat()">×</button>
+            </div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input-container">
+                <input type="text" class="chat-input" id="chatInput" 
+                       placeholder="비즈니스에 대해 질문해보세요..." 
+                       onkeypress="handleChatKeyPress(event)">
+            </div>
+        </div>
+        
+        <!-- 컨트롤 패널 -->
+        <div class="control-panel">
+            <h2 style="color: #3498db; margin-bottom: 15px; text-align: center;">🏢 비즈니스 구역</h2>
+            
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: #3498db; margin-bottom: 10px; font-size: 16px;">🎮 컨트롤</h3>
+                <button class="control-btn" onclick="toggleAvatar()">🚶‍♂️ 아바타 소환</button>
+                <button class="control-btn" onclick="resetCamera()">📷 카메라 리셋</button>
+                <button class="control-btn" onclick="toggleLighting()">💡 조명 변경</button>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: #3498db; margin-bottom: 10px; font-size: 16px;">💼 비즈니스 도깨비들</h3>
+                <div id="businessGoblinGrid">
+                    <!-- 비즈니스 도깨비들이 여기에 생성됩니다 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Three.js 및 GSAP 라이브러리 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+    <script>
+        // 🏢 비즈니스 구역 전역 변수
+        let scene, camera, renderer, controls;
+        let currentChatGoblin = null; // 🏢 현재 채팅 중인 도깨비
+        let avatar = null;
+        let isSystemReady = false;
+        
+        // 💼 비즈니스 전문 도깨비들
+        const businessGoblins = [
+            { name: '💰 투자마법사', specialty: '투자 전략', description: '최고의 투자 기회를 찾아내는 도깨비', emoji: '💰', color: 0xFFD700 },
+            { name: '📊 데이터분석관', specialty: '비즈니스 분석', description: '복잡한 데이터를 명쾌하게 분석하는 도깨비', emoji: '📊', color: 0x1E90FF },
+            { name: '🎯 마케팅천재', specialty: '마케팅 전략', description: '브랜드를 세계적으로 알리는 마케팅 도깨비', emoji: '🎯', color: 0xFF6347 },
+            { name: '⚖️ 법무컨설턴트', specialty: '법무 자문', description: '모든 법적 문제를 해결하는 지혜로운 도깨비', emoji: '⚖️', color: 0x4B0082 },
+            { name: '🏗️ 사업설계사', specialty: '사업 기획', description: '성공하는 사업 모델을 설계하는 도깨비', emoji: '🏗️', color: 0x228B22 },
+            { name: '🤝 협상전문가', specialty: '협상 기술', description: '윈-윈 협상을 이끌어내는 도깨비', emoji: '🤝', color: 0xFF1493 }
+        ];
+        
+        // 🎯 상태 업데이트 함수
+        function updateStatus(message) {
+            const statusElement = document.getElementById('statusDisplay');
+            if (statusElement) {
+                statusElement.textContent = message;
+            }
+        }
+        
+        // 🔙 도깨비 마을로 돌아가기
+        function goBackToVillage() {
+            updateStatus('🏘️ 도깨비 마을로 돌아가는 중...');
+            // GitHub Pages용 베이스 URL 계산
+            const baseURL = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/');
+            setTimeout(() => {
+                window.location.href = baseURL + 'index.html';
+            }, 1000);
+        }
+        
+        // 🎮 아바타 토글
+        function toggleAvatar() {
+            if (!avatar) {
+                createAvatar();
+            } else {
+                removeAvatar();
+            }
+        }
+        
+        // 🚶‍♂️ 아바타 생성
+        function createAvatar() {
+            avatar = new THREE.Group();
+            
+            // 비즈니스맨 정장 (몸통)
+            const bodyGeometry = new THREE.CylinderGeometry(0.3, 0.4, 1.5);
+            const bodyMaterial = new THREE.MeshPhongMaterial({ color: 0x2c3e50 });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 1;
+            avatar.add(body);
+            
+            // 머리
+            const headGeometry = new THREE.SphereGeometry(0.4);
+            const headMaterial = new THREE.MeshPhongMaterial({ color: 0xf4d1ae });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 2.2;
+            avatar.add(head);
+            
+            // 정장 타이
+            const tieGeometry = new THREE.BoxGeometry(0.1, 0.8, 0.05);
+            const tieMaterial = new THREE.MeshPhongMaterial({ color: 0x8b0000 });
+            const tie = new THREE.Mesh(tieGeometry, tieMaterial);
+            tie.position.set(0, 1.2, 0.4);
+            avatar.add(tie);
+            
+            // 서류가방
+            const briefcaseGeometry = new THREE.BoxGeometry(0.6, 0.4, 0.2);
+            const briefcaseMaterial = new THREE.MeshPhongMaterial({ color: 0x8b4513 });
+            const briefcase = new THREE.Mesh(briefcaseGeometry, briefcaseMaterial);
+            briefcase.position.set(0.8, 0.8, 0);
+            avatar.add(briefcase);
+            
+            // 비즈니스 오라
+            const auraGeometry = new THREE.RingGeometry(0.8, 1.2, 16);
+            const auraMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x3498db, 
+                transparent: true, 
+                opacity: 0.3,
+                side: THREE.DoubleSide
+            });
+            const aura = new THREE.Mesh(auraGeometry, auraMaterial);
+            aura.rotation.x = -Math.PI / 2;
+            aura.position.y = 0.1;
+            avatar.add(aura);
+            
+            gsap.to(aura.rotation, {
+                z: Math.PI * 2,
+                duration: 4,
+                repeat: -1,
+                ease: "none"
+            });
+            
+            avatar.position.set(0, 0, 0);
+            scene.add(avatar);
+            
+            if (camera && controls) {
+                gsap.to(camera.position, {
+                    x: 5, y: 5, z: 10,
+                    duration: 1.5,
+                    ease: "power2.out"
+                });
+                gsap.to(controls.target, {
+                    x: 0, y: 1, z: 0,
+                    duration: 1.5,
+                    ease: "power2.out",
+                    onUpdate: () => controls.update()
+                });
+            }
+            
+            updateStatus('🚶‍♂️ 비즈니스맨 아바타가 소환되었습니다!');
+        }
+        
+        // 🚶‍♂️ 아바타 제거
+        function removeAvatar() {
+            if (avatar) {
+                while(avatar.children.length > 0) {
+                    const child = avatar.children[0];
+                    avatar.remove(child);
+                    if (child.geometry) child.geometry.dispose();
+                    if (child.material) child.material.dispose();
+                }
+                scene.remove(avatar);
+                avatar = null;
+                updateStatus('👋 아바타가 사라졌습니다');
+            }
+        }
+        
+        // 📷 카메라 리셋
+        function resetCamera() {
+            if (camera && controls) {
+                gsap.to(camera.position, {
+                    x: 0, y: 15, z: 25,
+                    duration: 1.5,
+                    ease: "power2.out"
+                });
+                gsap.to(controls.target, {
+                    x: 0, y: 0, z: 0,
+                    duration: 1.5,
+                    ease: "power2.out",
+                    onUpdate: () => controls.update()
+                });
+                updateStatus('📷 카메라가 비즈니스 구역 중심으로 리셋되었습니다');
+            }
+        }
+        
+        // 💡 조명 변경
+        function toggleLighting() {
+            const lightings = ['☀️ 낮', '🌙 밤', '💡 네온', '🔥 따뜻함'];
+            const randomLighting = lightings[Math.floor(Math.random() * lightings.length)];
+            updateStatus(`🏢 비즈니스 구역 조명이 ${randomLighting}로 변했습니다`);
+        }
+        
+        // 🏷️ 비즈니스 도깨비 이름표 생성
+        function createBusinessGoblinNameTag(name, specialty) {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = 512;
+            canvas.height = 256;
+            
+            // 비즈니스 스타일 배경
+            context.fillStyle = 'rgba(44, 62, 80, 0.9)';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 프로페셔널한 테두리
+            context.strokeStyle = '#3498db';
+            context.lineWidth = 8;
+            context.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
+            
+            // 이름 텍스트
+            context.fillStyle = '#3498db';
+            context.font = 'bold 48px Arial';
+            context.textAlign = 'center';
+            context.fillText(name, canvas.width / 2, 80);
+            
+            // 전문 분야 텍스트
+            context.fillStyle = '#85c1e9';
+            context.font = '32px Arial';
+            context.fillText(specialty, canvas.width / 2, 140);
+            
+            // 프로페셔널 라인
+            context.strokeStyle = '#3498db';
+            context.lineWidth = 2;
+            context.beginPath();
+            context.moveTo(50, 160);
+            context.lineTo(canvas.width - 50, 160);
+            context.stroke();
+            
+            // 다이아몬드 장식들
+            context.fillStyle = '#5dade2';
+            for (let i = 0; i < 5; i++) {
+                const x = 80 + i * 90;
+                const y = 200;
+                context.save();
+                context.translate(x, y);
+                context.rotate(Math.PI / 4);
+                context.fillRect(-6, -6, 12, 12);
+                context.restore();
+            }
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+            
+            const planeGeometry = new THREE.PlaneGeometry(4, 2);
+            const planeMaterial = new THREE.MeshBasicMaterial({ 
+                map: texture, 
+                transparent: true,
+                side: THREE.DoubleSide
+            });
+            
+            const nameTagMesh = new THREE.Mesh(planeGeometry, planeMaterial);
+            nameTagMesh.userData.isNameTag = true;
+            
+            return nameTagMesh;
+        }
+        
+        // 💼 3D 비즈니스 도깨비들 생성
+        function createBusiness3DGoblins() {
+            businessGoblins.forEach((goblin, index) => {
+                const goblin3D = createBusiness3DGoblin(goblin, index);
+                scene.add(goblin3D);
+            });
+        }
+        
+        // 💼 개별 3D 비즈니스 도깨비 생성
+        function createBusiness3DGoblin(goblinData, index) {
+            const goblinGroup = new THREE.Group();
+            
+            // 도깨비 몸체 (정장 스타일)
+            const bodyGeometry = new THREE.CylinderGeometry(0.8, 1, 2);
+            const bodyMaterial = new THREE.MeshPhongMaterial({ 
+                color: goblinData.color,
+                shininess: 100
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 1;
+            goblinGroup.add(body);
+            
+            // 정장 어깨
+            const shoulderGeometry = new THREE.BoxGeometry(2.2, 0.3, 1.2);
+            const shoulderMaterial = new THREE.MeshPhongMaterial({ color: 0x2c3e50 });
+            const shoulder = new THREE.Mesh(shoulderGeometry, shoulderMaterial);
+            shoulder.position.y = 1.8;
+            goblinGroup.add(shoulder);
+            
+            // 도깨비 머리
+            const headGeometry = new THREE.SphereGeometry(0.6);
+            const headMaterial = new THREE.MeshPhongMaterial({ color: 0xf4d1ae });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 2.8;
+            goblinGroup.add(head);
+            
+            // 안경
+            const glassGeometry = new THREE.RingGeometry(0.15, 0.25, 16);
+            const glassMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            const leftGlass = new THREE.Mesh(glassGeometry, glassMaterial);
+            leftGlass.position.set(-0.2, 2.8, 0.5);
+            goblinGroup.add(leftGlass);
+            
+            const rightGlass = new THREE.Mesh(glassGeometry, glassMaterial);
+            rightGlass.position.set(0.2, 2.8, 0.5);
+            goblinGroup.add(rightGlass);
+            
+            // 모자 (비즈니스 햇)
+            const hatGeometry = new THREE.CylinderGeometry(0.8, 0.8, 0.3);
+            const hatMaterial = new THREE.MeshPhongMaterial({ color: 0x2c3e50 });
+            const hat = new THREE.Mesh(hatGeometry, hatMaterial);
+            hat.position.y = 3.5;
+            goblinGroup.add(hat);
+            
+            // 비즈니스 오라
+            const auraGeometry = new THREE.RingGeometry(2, 2.5, 16);
+            const auraMaterial = new THREE.MeshBasicMaterial({ 
+                color: goblinData.color,
+                transparent: true,
+                opacity: 0.2,
+                side: THREE.DoubleSide
+            });
+            const aura = new THREE.Mesh(auraGeometry, auraMaterial);
+            aura.rotation.x = -Math.PI / 2;
+            aura.position.y = 0.1;
+            goblinGroup.add(aura);
+            
+            // 이름표 추가
+            const nameTag = createBusinessGoblinNameTag(goblinData.name, goblinData.specialty);
+            nameTag.position.set(0, 5, 0);
+            goblinGroup.add(nameTag);
+            
+            // 위치 설정 (육각형 배치)
+            const angle = (index / businessGoblins.length) * Math.PI * 2;
+            const radius = 18;
+            const x = Math.cos(angle) * radius;
+            const z = Math.sin(angle) * radius;
+            goblinGroup.position.set(x, 0, z);
+            
+            goblinGroup.lookAt(0, 1, 0);
+            
+            goblinGroup.userData = {
+                goblinData: goblinData,
+                index: index,
+                isBusinessGoblin: true
+            };
+            
+            // 프로페셔널한 애니메이션
+            gsap.to(goblinGroup.position, {
+                y: Math.sin(index) * 0.3,
+                duration: 4 + index * 0.3,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            gsap.to(aura.rotation, {
+                z: Math.PI * 2,
+                duration: 5 + index,
+                repeat: -1,
+                ease: "none"
+            });
+            
+            return goblinGroup;
+        }
+        
+        // 💼 비즈니스 도깨비 클릭 처리
+        function onBusinessCanvasClick(event) {
+            if (!camera || !scene) return;
+            
+            const rect = renderer.domElement.getBoundingClientRect();
+            const mouse = new THREE.Vector2();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(mouse, camera);
+            
+            const intersects = raycaster.intersectObjects(scene.children, true);
+            
+            if (intersects.length > 0) {
+                let clickedObject = intersects[0].object;
+                
+                while (clickedObject && !clickedObject.userData.isBusinessGoblin) {
+                    clickedObject = clickedObject.parent;
+                }
+                
+                if (clickedObject && clickedObject.userData.isBusinessGoblin) {
+                    const goblinData = clickedObject.userData.goblinData;
+                    selectBusinessGoblin(goblinData);
+                    
+                    gsap.to(clickedObject.scale, {
+                        x: 1.2, y: 1.2, z: 1.2,
+                        duration: 0.2,
+                        yoyo: true,
+                        repeat: 1,
+                        ease: "power2.out"
+                    });
+                }
+            }
+        }
+        
+        // 💼 비즈니스 도깨비 카드 생성
+        function createBusinessGoblinCards() {
+            const gridElement = document.getElementById('businessGoblinGrid');
+            
+            businessGoblins.forEach((goblin, index) => {
+                const card = document.createElement('div');
+                card.className = 'business-goblin-card';
+                card.onclick = () => selectBusinessGoblin(goblin);
+                
+                card.innerHTML = `
+                    <div class="goblin-name">${goblin.name}</div>
+                    <div class="goblin-specialty">${goblin.specialty}</div>
+                    <div style="font-size: 12px; color: #aed6f1;">${goblin.description}</div>
+                `;
+                
+                gridElement.appendChild(card);
+            });
+        }
+        
+        // 💼 비즈니스 도깨비 선택
+        function selectBusinessGoblin(goblin) {
+            updateStatus(`💼 ${goblin.name}과 비즈니스 미팅을 시작합니다!`);
+            console.log('선택된 비즈니스 도깨비:', goblin);
+            
+            // 🏢 채팅 시스템 열기
+            openChat(goblin);
+            
+            setTimeout(() => {
+                updateStatus(`🏢 ${goblin.name}: "${goblin.description}"`);
+            }, 1500);
+        }
+
+        // 🏢 채팅 시스템 열기
+        function openChat(goblin) {
+            currentChatGoblin = goblin;
+            
+            const chatContainer = document.getElementById('chatContainer');
+            const chatTitle = document.getElementById('chatTitle');
+            const chatMessages = document.getElementById('chatMessages');
+            
+            chatTitle.textContent = `🏢 ${goblin.name}과의 비즈니스 대화`;
+            chatMessages.innerHTML = `
+                <div class="message goblin-message">
+                    <div class="avatar">🏢</div>
+                    <div class="text">${goblin.name}: 안녕하세요! 비즈니스 구역에 오신 것을 환영합니다. 어떤 비즈니스 주제에 대해 이야기하고 싶으신가요? 💼✨</div>
+                </div>
+            `;
+            
+            chatContainer.style.display = 'flex';
+            document.getElementById('chatInput').focus();
+        }
+
+        // 🏢 채팅 시스템 닫기
+        function closeChat() {
+            document.getElementById('chatContainer').style.display = 'none';
+            currentChatGoblin = null;
+        }
+
+        // 🏢 채팅 입력 처리
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+
+        // 🏢 채팅 메시지 전송
+        function sendChatMessage() {
+            const chatInput = document.getElementById('chatInput');
+            const message = chatInput.value.trim();
+            
+            if (message && currentChatGoblin) {
+                const chatMessages = document.getElementById('chatMessages');
+                
+                // 사용자 메시지 추가
+                chatMessages.innerHTML += `
+                    <div class="message user-message">
+                        <div class="text">${message}</div>
+                        <div class="avatar">👤</div>
+                    </div>
+                `;
+                
+                // 도깨비 응답 생성
+                const response = generateBusinessGoblinResponse(currentChatGoblin, message);
+                
+                setTimeout(() => {
+                    chatMessages.innerHTML += `
+                        <div class="message goblin-message">
+                            <div class="avatar">🏢</div>
+                            <div class="text">${currentChatGoblin.name}: ${response}</div>
+                        </div>
+                    `;
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }, 1000);
+                
+                chatInput.value = '';
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+
+        // 🏢 비즈니스 도깨비 AI 응답 생성
+        function generateBusinessGoblinResponse(goblin, userMessage) {
+            const message = userMessage.toLowerCase();
+            
+            // 비즈니스 분야별 전문 응답
+            if (goblin.name === '경영전략가') {
+                if (message.includes('전략') || message.includes('경영') || message.includes('계획')) {
+                    return "성공적인 경영 전략은 명확한 비전과 실행 가능한 계획에서 시작됩니다. SWOT 분석을 통해 강점을 극대화하고 기회를 포착하세요! 📊💡";
+                } else if (message.includes('리더십') || message.includes('팀') || message.includes('관리')) {
+                    return "훌륭한 리더는 비전을 제시하고 팀을 동기부여합니다. 변화하는 시대에는 적응력과 소통 능력이 핵심이죠! 👥🌟";
+                } else if (message.includes('혁신') || message.includes('변화')) {
+                    return "혁신은 기존의 틀을 깨고 새로운 가치를 창출하는 것입니다. 고객의 니즈를 파악하고 시장의 변화를 읽어보세요! 🚀💭";
+                }
+            } else if (goblin.name === '마케팅대왕') {
+                if (message.includes('마케팅') || message.includes('광고') || message.includes('브랜드')) {
+                    return "마케팅은 고객과의 감정적 연결입니다! 타겟 고객을 정확히 파악하고 그들의 마음에 닿는 메시지를 전달하세요. 🎯❤️";
+                } else if (message.includes('sns') || message.includes('소셜미디어') || message.includes('디지털')) {
+                    return "디지털 마케팅 시대에는 콘텐츠가 왕입니다! 인스타그램, 틱톡, 유튜브에서 바이럴 콘텐츠를 만들어보세요. 📱✨";
+                } else if (message.includes('고객') || message.includes('브랜딩')) {
+                    return "강력한 브랜드는 고객의 라이프스타일에 녹아듭니다. 브랜드 스토리텔링으로 고객과 깊은 유대감을 만들어보세요! 🏷️💎";
+                }
+            } else if (goblin.name === '투자귀재') {
+                if (message.includes('투자') || message.includes('주식') || message.includes('펀드')) {
+                    return "투자의 기본은 분산과 장기적 관점입니다! 리스크를 관리하면서 포트폴리오를 다양화하는 것이 중요해요. 📈💰";
+                } else if (message.includes('위험') || message.includes('수익') || message.includes('분석')) {
+                    return "고수익 뒤에는 항상 고위험이 있습니다. 펀더멘털 분석과 기술적 분석을 병행하여 신중하게 투자하세요! ⚖️🔍";
+                } else if (message.includes('부동산') || message.includes('경제')) {
+                    return "부동산은 인플레이션 헤지 수단입니다. 위치, 교통, 개발 계획을 종합적으로 고려하여 투자하세요! 🏘️📊";
+                }
+            } else if (goblin.name === '창업멘토') {
+                if (message.includes('창업') || message.includes('스타트업') || message.includes('사업')) {
+                    return "창업은 문제를 해결하는 여정입니다! 고객의 진짜 문제를 찾고, MVP로 빠르게 검증해보세요. 실패를 두려워하지 마세요! 🚀💪";
+                } else if (message.includes('아이디어') || message.includes('비즈니스모델')) {
+                    return "좋은 아이디어보다 실행력이 중요합니다. 린 스타트업 방법론으로 빠르게 시장에 출시하고 피드백을 받아보세요! 💡⚡";
+                } else if (message.includes('자금') || message.includes('투자유치')) {
+                    return "자금 조달은 단계별로 접근하세요. 엔젤 투자자, VC, 크라우드펀딩 등 다양한 옵션을 고려해보세요! 💸🎯";
+                }
+            } else if (goblin.name === '세무전문가') {
+                if (message.includes('세금') || message.includes('세무') || message.includes('신고')) {
+                    return "세무는 사업의 생명선입니다! 정확한 세무 신고와 절세 전략으로 건전한 사업 운영을 도와드릴게요. 📋🔢";
+                } else if (message.includes('절세') || message.includes('공제') || message.includes('혜택')) {
+                    return "합법적인 절세 방법은 많습니다. 연구개발비, 교육훈련비, 기부금 등의 공제 혜택을 적극 활용하세요! 💡📊";
+                } else if (message.includes('법인') || message.includes('개인사업자')) {
+                    return "사업 형태에 따라 세금 구조가 달라집니다. 법인과 개인사업자의 장단점을 비교해서 최적의 선택을 하세요! ⚖️🏢";
+                }
+            } else if (goblin.name === 'HR전문가') {
+                if (message.includes('인사') || message.includes('채용') || message.includes('인재')) {
+                    return "훌륭한 인재는 회사의 자산입니다! 역량 기반 채용과 체계적인 교육으로 최고의 팀을 만들어보세요. 👥⭐";
+                } else if (message.includes('문화') || message.includes('복지') || message.includes('동기부여')) {
+                    return "기업 문화는 성과의 기반입니다. 소통과 신뢰를 바탕으로 한 조직 문화가 직원들의 창의성을 발휘시켜요! 🌟💫";
+                } else if (message.includes('성과') || message.includes('평가') || message.includes('교육')) {
+                    return "공정한 성과 평가와 지속적인 교육이 조직 발전의 핵심입니다. 개인의 성장이 곧 회사의 성장이에요! 📈🎓";
+                }
+            }
+            
+            // 일반적인 비즈니스 응답
+            const generalResponses = [
+                `${goblin.name}이 ${goblin.description.slice(0, 50)}... 더 자세히 알고 싶은 것이 있으신가요? 🏢✨`,
+                "성공적인 비즈니스는 고객 가치 창출에서 시작됩니다. 함께 전략을 세워봅시다! 💼🎯",
+                "변화하는 시장에서 살아남으려면 혁신이 필요합니다. 어떤 분야에 관심이 있으신가요? 🚀💡",
+                "비즈니스는 사람과 사람의 관계입니다. 신뢰를 바탕으로 파트너십을 구축해봅시다! 🤝💎",
+                "데이터 기반 의사결정이 현대 비즈니스의 핵심입니다. 함께 분석해봅시다! 📊🔍"
+            ];
+            
+            return generalResponses[Math.floor(Math.random() * generalResponses.length)];
+        }
+        
+        // 🏢 비즈니스 환경 생성
+        function createBusinessEnvironment() {
+            // 🏢 고층 빌딩들
+            for (let i = 0; i < 20; i++) {
+                createSkyscraper();
+            }
+            
+            // 🚗 비즈니스 카들
+            for (let i = 0; i < 10; i++) {
+                createBusinessCar();
+            }
+            
+            // 💡 네온 사인들
+            for (let i = 0; i < 15; i++) {
+                createNeonSign();
+            }
+            
+            // 🌃 도시 조명
+            createCityLighting();
+        }
+        
+        // 🏢 고층 빌딩 생성
+        function createSkyscraper() {
+            const buildingGroup = new THREE.Group();
+            
+            const height = 15 + Math.random() * 25;
+            const width = 3 + Math.random() * 2;
+            const depth = 3 + Math.random() * 2;
+            
+            const buildingGeometry = new THREE.BoxGeometry(width, height, depth);
+            const buildingColors = [0x2c3e50, 0x34495e, 0x5d6d7e, 0x85929e];
+            const buildingColor = buildingColors[Math.floor(Math.random() * buildingColors.length)];
+            const buildingMaterial = new THREE.MeshPhongMaterial({ color: buildingColor });
+            const building = new THREE.Mesh(buildingGeometry, buildingMaterial);
+            building.position.y = height / 2;
+            buildingGroup.add(building);
+            
+            // 창문들
+            for (let floor = 0; floor < height / 3; floor++) {
+                for (let window = 0; window < 3; window++) {
+                    const windowGeometry = new THREE.PlaneGeometry(0.3, 0.3);
+                    const windowMaterial = new THREE.MeshBasicMaterial({ 
+                        color: Math.random() > 0.7 ? 0xffff99 : 0x333333,
+                        transparent: true,
+                        opacity: 0.8
+                    });
+                    const windowMesh = new THREE.Mesh(windowGeometry, windowMaterial);
+                    windowMesh.position.set(
+                        -width/2 + 0.5 + window * 0.8,
+                        1 + floor * 3,
+                        depth/2 + 0.01
+                    );
+                    buildingGroup.add(windowMesh);
+                }
+            }
+            
+            const x = (Math.random() - 0.5) * 80;
+            const z = (Math.random() - 0.5) * 80;
+            buildingGroup.position.set(x, 0, z);
+            
+            scene.add(buildingGroup);
+        }
+        
+        // 🚗 비즈니스 카 생성
+        function createBusinessCar() {
+            const carGroup = new THREE.Group();
+            
+            const carBody = new THREE.BoxGeometry(4, 1, 2);
+            const carMaterial = new THREE.MeshPhongMaterial({ color: 0x2c3e50 });
+            const car = new THREE.Mesh(carBody, carMaterial);
+            car.position.y = 0.5;
+            carGroup.add(car);
+            
+            // 바퀴들
+            const wheelGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.2);
+            const wheelMaterial = new THREE.MeshPhongMaterial({ color: 0x000000 });
+            
+            const positions = [[-1.5, 0, -0.8], [1.5, 0, -0.8], [-1.5, 0, 0.8], [1.5, 0, 0.8]];
+            positions.forEach(pos => {
+                const wheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
+                wheel.rotation.z = Math.PI / 2;
+                wheel.position.set(pos[0], pos[1], pos[2]);
+                carGroup.add(wheel);
+            });
+            
+            const x = (Math.random() - 0.5) * 60;
+            const z = (Math.random() - 0.5) * 60;
+            carGroup.position.set(x, 0, z);
+            
+            scene.add(carGroup);
+        }
+        
+        // 💡 네온 사인 생성
+        function createNeonSign() {
+            const signGeometry = new THREE.PlaneGeometry(4, 2);
+            const neonColors = [0x3498db, 0xe74c3c, 0xf39c12, 0x2ecc71];
+            const signColor = neonColors[Math.floor(Math.random() * neonColors.length)];
+            const signMaterial = new THREE.MeshBasicMaterial({ 
+                color: signColor,
+                transparent: true,
+                opacity: 0.8
+            });
+            const sign = new THREE.Mesh(signGeometry, signMaterial);
+            
+            const x = (Math.random() - 0.5) * 70;
+            const y = 5 + Math.random() * 10;
+            const z = (Math.random() - 0.5) * 70;
+            sign.position.set(x, y, z);
+            
+            // 깜빡이는 효과
+            gsap.to(sign.material, {
+                opacity: 0.3,
+                duration: 1 + Math.random(),
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            scene.add(sign);
+        }
+        
+        // 🌃 도시 조명
+        function createCityLighting() {
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0x3498db, 0.8);
+            directionalLight.position.set(10, 20, 10);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+            
+            // 네온 조명들
+            for (let i = 0; i < 5; i++) {
+                const neonLight = new THREE.PointLight(0x3498db, 1, 20);
+                neonLight.position.set(
+                    (Math.random() - 0.5) * 40,
+                    5 + Math.random() * 10,
+                    (Math.random() - 0.5) * 40
+                );
+                scene.add(neonLight);
+            }
+        }
+        
+        // 🏢 비즈니스 구역 초기화
+        function initBusinessDistrict() {
+            console.log('🏢 비즈니스 구역 초기화 시작...');
+            
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+            
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 15, 25);
+            
+            const canvas = document.getElementById('business-canvas');
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            
+            // 🏢 비즈니스 환경 생성
+            createBusinessEnvironment();
+            
+            // 💼 3D 비즈니스 도깨비들 생성
+            createBusiness3DGoblins();
+            
+            // 💼 비즈니스 도깨비 카드 생성
+            createBusinessGoblinCards();
+            
+            // 🖱️ 캔버스 클릭 이벤트 추가
+            canvas.addEventListener('click', onBusinessCanvasClick);
+            
+            isSystemReady = true;
+            updateStatus('🏢 비즈니스 구역이 완성되었습니다! 성공적인 비즈니스를 시작하세요!');
+            
+            animate();
+        }
+        
+        // 🎬 애니메이션 루프
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (controls) {
+                controls.update();
+            }
+            
+            if (avatar && controls) {
+                controls.target.copy(avatar.position);
+                controls.target.y += 1;
+            }
+            
+            // 🏷️ 모든 이름표들이 카메라를 바라보도록 업데이트
+            scene.traverse((object) => {
+                if (object.userData && object.userData.isNameTag && camera) {
+                    object.lookAt(camera.position);
+                }
+            });
+            
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+        
+        // 📱 윈도우 리사이즈 처리
+        window.addEventListener('resize', () => {
+            if (camera && renderer) {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        });
+        
+        // 🚀 비즈니스 구역 시작
+        window.addEventListener('load', () => {
+            initBusinessDistrict();
+        });
+    </script>
+</body>
+</html>

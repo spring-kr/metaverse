@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📚 지혜의 도서관 - 도깨비 메타버스</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #8b4513 50%, #d4af37 100%);
+            color: white;
+            overflow: hidden;
+        }
+        
+        #library-canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            cursor: crosshair;
+        }
+        
+        /* 메인 UI 컨테이너 */
+        .ui-container {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        
+        .ui-container > * {
+            pointer-events: auto;
+        }
+        
+        /* 상태 표시 */
+        .status-display {
+            background: rgba(44, 62, 80, 0.9);
+            border: 2px solid #d4af37;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+        }
+        
+        /* 컨트롤 패널 */
+        .control-panel {
+            background: rgba(44, 62, 80, 0.95);
+            border: 2px solid #d4af37;
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4);
+            min-width: 300px;
+        }
+        
+        .control-btn {
+            background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+            border: none;
+            border-radius: 8px;
+            color: #2c3e50;
+            padding: 12px 16px;
+            margin: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
+        }
+        
+        /* 뒤로가기 버튼 */
+        .back-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1001;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            padding: 15px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+        
+        /* 도서관 도깨비 카드 */
+        .library-goblin-card {
+            background: rgba(44, 62, 80, 0.9);
+            border: 2px solid #d4af37;
+            border-radius: 15px;
+            padding: 15px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .library-goblin-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
+            border-color: #f1c40f;
+        }
+        
+        .goblin-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #d4af37;
+            margin-bottom: 8px;
+        }
+        
+        .goblin-specialty {
+            font-size: 14px;
+            color: #f1c40f;
+            margin-bottom: 5px;
+        }
+        
+        /* AI 채팅 시스템 */
+        .chat-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 400px;
+            height: 300px;
+            background: rgba(44, 62, 80, 0.95);
+            border: 2px solid #d4af37;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            z-index: 1002;
+            display: none;
+            flex-direction: column;
+        }
+        
+        .chat-header {
+            background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+            color: #2c3e50;
+            padding: 15px;
+            border-radius: 13px 13px 0 0;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chat-close {
+            background: none;
+            border: none;
+            color: #2c3e50;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 25px;
+            height: 25px;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            max-height: 200px;
+        }
+        
+        .chat-message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 10px;
+            max-width: 80%;
+        }
+        
+        .user-message {
+            background: #b8860b;
+            color: white;
+            margin-left: auto;
+        }
+        
+        .ai-message {
+            background: rgba(212, 175, 55, 0.3);
+            color: #d4af37;
+            border: 1px solid #d4af37;
+        }
+        
+        .chat-input-container {
+            padding: 15px;
+            border-top: 1px solid #d4af37;
+        }
+        
+        .chat-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d4af37;
+            border-radius: 8px;
+            background: rgba(212, 175, 55, 0.1);
+            color: white;
+            font-size: 14px;
+        }
+        
+        .chat-input::placeholder {
+            color: #f7dc6f;
+        }
+        
+        .chat-input:focus {
+            outline: none;
+            border-color: #f1c40f;
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- 뒤로가기 버튼 -->
+    <button class="back-btn" onclick="goBackToVillage()">← 🏘️ 도깨비 마을로</button>
+    
+    <!-- 메인 캔버스 -->
+    <canvas id="library-canvas"></canvas>
+    
+    <!-- UI 컨테이너 -->
+    <div class="ui-container">
+        <!-- 상태 표시 -->
+        <div class="status-display" id="statusDisplay">
+            📚 지혜의 도서관에 오신 것을 환영합니다!
+        </div>
+        
+        <!-- 컨트롤 패널 -->
+        <div class="control-panel">
+            <h2 style="color: #d4af37; margin-bottom: 15px; text-align: center;">📚 지혜의 도서관</h2>
+            
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: #d4af37; margin-bottom: 10px; font-size: 16px;">🎮 컨트롤</h3>
+                <button class="control-btn" onclick="toggleAvatar()">👨‍🎓 학자 아바타</button>
+                <button class="control-btn" onclick="resetCamera()">📷 카메라 리셋</button>
+                <button class="control-btn" onclick="toggleSection()">📖 서고 변경</button>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: #d4af37; margin-bottom: 10px; font-size: 16px;">📖 도서관 도깨비들</h3>
+                <div id="libraryGoblinGrid">
+                    <!-- 도서관 도깨비들이 여기에 생성됩니다 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- AI 채팅 시스템 -->
+    <div class="chat-container" id="chatContainer">
+        <div class="chat-header">
+            <span id="chatTitle">📜 고서연구가와 대화</span>
+            <button class="chat-close" onclick="closeChat()">×</button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <!-- 채팅 메시지들이 여기에 표시됩니다 -->
+        </div>
+        <div class="chat-input-container">
+            <input type="text" class="chat-input" id="chatInput" placeholder="도서관 도깨비에게 지식을 물어보세요..." onkeypress="handleChatKeyPress(event)">
+        </div>
+    </div>
+    
+    <!-- Three.js 및 GSAP 라이브러리 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+    <script>
+        // 📚 지혜의 도서관 전역 변수
+        let scene, camera, renderer, controls;
+        let currentChatGoblin = null; // 📚 현재 채팅 중인 도깨비
+        let avatar = null;
+        let isSystemReady = false;
+        
+        // 📖 지혜의 도깨비들
+        const libraryGoblins = [
+            { name: '📜 고서연구가', specialty: '고전 문학', description: '고대 지혜를 현대에 전하는 도깨비', emoji: '📜', color: 0xd4af37 },
+            { name: '🔬 과학사서', specialty: '과학 연구', description: '모든 과학 지식을 관리하는 도깨비', emoji: '🔬', color: 0x3498db },
+            { name: '🌍 역사관리자', specialty: '역사학', description: '인류 역사를 기록하고 보존하는 도깨비', emoji: '🌍', color: 0x8b4513 },
+            { name: '🧮 수학마법사', specialty: '수학', description: '숫자의 비밀을 풀어내는 수학 도깨비', emoji: '🧮', color: 0x2ecc71 },
+            { name: '🎭 문화보관자', specialty: '인문학', description: '인간의 문화와 예술을 연구하는 도깨비', emoji: '🎭', color: 0x9b59b6 },
+            { name: '🔮 미래학자', specialty: '미래 연구', description: '미래를 예측하고 준비하는 도깨비', emoji: '🔮', color: 0xe74c3c }
+        ];
+        
+        // 🎯 상태 업데이트 함수
+        function updateStatus(message) {
+            const statusElement = document.getElementById('statusDisplay');
+            if (statusElement) {
+                statusElement.textContent = message;
+            }
+        }
+        
+        // 🔙 도깨비 마을로 돌아가기
+        function goBackToVillage() {
+            updateStatus('🏘️ 도깨비 마을로 돌아가는 중...');
+            // GitHub Pages용 베이스 URL 계산
+            const baseURL = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/');
+            setTimeout(() => {
+                window.location.href = baseURL + 'index.html';
+            }, 1000);
+        }
+        
+        // 🎮 아바타 토글
+        function toggleAvatar() {
+            if (!avatar) {
+                createAvatar();
+            } else {
+                removeAvatar();
+            }
+        }
+        
+        // 👨‍🎓 학자 아바타 생성
+        function createAvatar() {
+            avatar = new THREE.Group();
+            
+            // 학자 로브 (긴 원통형)
+            const robeGeometry = new THREE.CylinderGeometry(0.5, 0.7, 2.2);
+            const robeMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x2c3e50,
+                shininess: 30
+            });
+            const robe = new THREE.Mesh(robeGeometry, robeMaterial);
+            robe.position.y = 1.1;
+            avatar.add(robe);
+            
+            // 학자 머리
+            const headGeometry = new THREE.SphereGeometry(0.5);
+            const headMaterial = new THREE.MeshPhongMaterial({ color: 0xf4d1ae });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 2.7;
+            avatar.add(head);
+            
+            // 모자 (졸업모)
+            const capGeometry = new THREE.CylinderGeometry(0.6, 0.6, 0.2);
+            const capMaterial = new THREE.MeshPhongMaterial({ color: 0x2c3e50 });
+            const cap = new THREE.Mesh(capGeometry, capMaterial);
+            cap.position.y = 3.4;
+            avatar.add(cap);
+            
+            // 졸업모 끈
+            const tasselGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.8);
+            const tasselMaterial = new THREE.MeshPhongMaterial({ color: 0xd4af37 });
+            const tassel = new THREE.Mesh(tasselGeometry, tasselMaterial);
+            tassel.position.set(0.5, 3.2, 0);
+            tassel.rotation.z = 0.3;
+            avatar.add(tassel);
+            
+            // 책 (왼손)
+            const bookGeometry = new THREE.BoxGeometry(0.3, 0.4, 0.05);
+            const bookMaterial = new THREE.MeshPhongMaterial({ color: 0x8b4513 });
+            const book = new THREE.Mesh(bookGeometry, bookMaterial);
+            book.position.set(-0.8, 1.8, 0);
+            book.rotation.z = 0.2;
+            avatar.add(book);
+            
+            // 지혜의 오라 (황금색)
+            for (let i = 0; i < 4; i++) {
+                const auraGeometry = new THREE.RingGeometry(0.8 + i * 0.3, 1.2 + i * 0.3, 16);
+                const auraMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xd4af37,
+                    transparent: true,
+                    opacity: 0.3 - i * 0.05,
+                    side: THREE.DoubleSide
+                });
+                const aura = new THREE.Mesh(auraGeometry, auraMaterial);
+                aura.rotation.x = -Math.PI / 2;
+                aura.position.y = 0.1;
+                avatar.add(aura);
+                
+                gsap.to(aura.rotation, {
+                    z: Math.PI * 2,
+                    duration: 6 - i * 0.5,
+                    repeat: -1,
+                    ease: "none"
+                });
+            }
+            
+            avatar.position.set(0, 0, 0);
+            scene.add(avatar);
+            
+            if (camera && controls) {
+                gsap.to(camera.position, {
+                    x: 6, y: 10, z: 15,
+                    duration: 1.5,
+                    ease: "power2.out"
+                });
+                gsap.to(controls.target, {
+                    x: 0, y: 1, z: 0,
+                    duration: 1.5,
+                    ease: "power2.out",
+                    onUpdate: () => controls.update()
+                });
+            }
+            
+            updateStatus('👨‍🎓 학자 아바타가 지혜 모드로 활성화되었습니다!');
+        }
+        
+        // 👨‍🎓 아바타 제거
+        function removeAvatar() {
+            if (avatar) {
+                while(avatar.children.length > 0) {
+                    const child = avatar.children[0];
+                    avatar.remove(child);
+                    if (child.geometry) child.geometry.dispose();
+                    if (child.material) child.material.dispose();
+                }
+                scene.remove(avatar);
+                avatar = null;
+                updateStatus('👋 학자 아바타가 연구를 마쳤습니다');
+            }
+        }
+        
+        // 📷 카메라 리셋
+        function resetCamera() {
+            if (camera && controls) {
+                gsap.to(camera.position, {
+                    x: 0, y: 25, z: 35,
+                    duration: 1.5,
+                    ease: "power2.out"
+                });
+                gsap.to(controls.target, {
+                    x: 0, y: 0, z: 0,
+                    duration: 1.5,
+                    ease: "power2.out",
+                    onUpdate: () => controls.update()
+                });
+                updateStatus('📷 카메라가 도서관 중앙으로 리셋되었습니다');
+            }
+        }
+        
+        // 📖 서고 변경
+        function toggleSection() {
+            const sections = ['📜 고전 서고', '🔬 과학 서고', '🌍 역사 서고', '🧮 수학 서고', '🎭 인문 서고'];
+            const randomSection = sections[Math.floor(Math.random() * sections.length)];
+            updateStatus(`📚 현재 위치: ${randomSection}`);
+        }
+        
+        // 🏷️ 도서관 도깨비 이름표 생성
+        function createLibraryGoblinNameTag(name, specialty) {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = 512;
+            canvas.height = 256;
+            
+            // 고급스러운 가죽 배경
+            const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, 'rgba(44, 62, 80, 0.95)');
+            gradient.addColorStop(0.5, 'rgba(139, 69, 19, 0.9)');
+            gradient.addColorStop(1, 'rgba(212, 175, 55, 0.95)');
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 고전적인 테두리
+            context.strokeStyle = '#d4af37';
+            context.lineWidth = 6;
+            context.strokeRect(3, 3, canvas.width - 6, canvas.height - 6);
+            
+            // 내부 장식 테두리
+            context.strokeStyle = '#f1c40f';
+            context.lineWidth = 2;
+            context.strokeRect(15, 15, canvas.width - 30, canvas.height - 30);
+            
+            // 이름 텍스트 (고전적 폰트)
+            context.shadowColor = '#d4af37';
+            context.shadowBlur = 8;
+            context.fillStyle = '#d4af37';
+            context.font = 'bold 40px serif';
+            context.textAlign = 'center';
+            context.fillText(name, canvas.width / 2, 80);
+            
+            // 전문 분야 텍스트
+            context.shadowBlur = 4;
+            context.fillStyle = '#f1c40f';
+            context.font = '28px serif';
+            context.fillText(specialty, canvas.width / 2, 130);
+            
+            // 고전적 장식 라인
+            context.shadowBlur = 0;
+            context.strokeStyle = '#d4af37';
+            context.lineWidth = 2;
+            context.beginPath();
+            context.moveTo(60, 150);
+            context.lineTo(canvas.width - 60, 150);
+            context.stroke();
+            
+            // 책 아이콘들
+            context.fillStyle = '#d4af37';
+            for (let i = 0; i < 7; i++) {
+                const x = 60 + i * 60;
+                const y = 190;
+                context.fillRect(x - 8, y - 12, 16, 24);
+                context.fillStyle = '#8b4513';
+                context.fillRect(x - 6, y - 10, 12, 20);
+                context.fillStyle = '#d4af37';
+            }
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+            
+            const planeGeometry = new THREE.PlaneGeometry(4, 2);
+            const planeMaterial = new THREE.MeshBasicMaterial({ 
+                map: texture, 
+                transparent: true,
+                side: THREE.DoubleSide
+            });
+            
+            const nameTagMesh = new THREE.Mesh(planeGeometry, planeMaterial);
+            nameTagMesh.userData.isNameTag = true;
+            
+            return nameTagMesh;
+        }
+        
+        // 📚 3D 도서관 도깨비들 생성
+        function createLibrary3DGoblins() {
+            libraryGoblins.forEach((goblin, index) => {
+                const goblin3D = createLibrary3DGoblin(goblin, index);
+                scene.add(goblin3D);
+            });
+        }
+        
+        // 📚 개별 3D 도서관 도깨비 생성
+        function createLibrary3DGoblin(goblinData, index) {
+            const goblinGroup = new THREE.Group();
+            
+            // 학자 로브 몸체
+            const robeGeometry = new THREE.CylinderGeometry(0.8, 1.2, 2.5);
+            const robeMaterial = new THREE.MeshPhongMaterial({ 
+                color: goblinData.color,
+                shininess: 60
+            });
+            const robe = new THREE.Mesh(robeGeometry, robeMaterial);
+            robe.position.y = 1.25;
+            goblinGroup.add(robe);
+            
+            // 도깨비 머리
+            const headGeometry = new THREE.SphereGeometry(0.7);
+            const headMaterial = new THREE.MeshPhongMaterial({ color: 0xf4d1ae });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 3.2;
+            goblinGroup.add(head);
+            
+            // 안경
+            const glassGeometry = new THREE.RingGeometry(0.2, 0.3, 16);
+            const glassMaterial = new THREE.MeshBasicMaterial({ color: 0x2c3e50 });
+            const leftGlass = new THREE.Mesh(glassGeometry, glassMaterial);
+            leftGlass.position.set(-0.25, 3.2, 0.6);
+            goblinGroup.add(leftGlass);
+            
+            const rightGlass = new THREE.Mesh(glassGeometry, glassMaterial);
+            rightGlass.position.set(0.25, 3.2, 0.6);
+            goblinGroup.add(rightGlass);
+            
+            // 학자 모자
+            const capGeometry = new THREE.CylinderGeometry(0.8, 0.8, 0.3);
+            const capMaterial = new THREE.MeshPhongMaterial({ color: 0x2c3e50 });
+            const cap = new THREE.Mesh(capGeometry, capMaterial);
+            cap.position.y = 4;
+            goblinGroup.add(cap);
+            
+            // 책들 (떠다니는 책들)
+            for (let i = 0; i < 6; i++) {
+                const bookGeometry = new THREE.BoxGeometry(0.3, 0.4, 0.08);
+                const bookColors = [0x8b4513, 0x2c3e50, 0xd4af37, 0x27ae60, 0x3498db, 0x9b59b6];
+                const bookMaterial = new THREE.MeshPhongMaterial({ color: bookColors[i] });
+                const book = new THREE.Mesh(bookGeometry, bookMaterial);
+                
+                const angle = (i / 6) * Math.PI * 2;
+                book.position.set(
+                    Math.cos(angle) * 2,
+                    3 + Math.sin(i) * 0.5,
+                    Math.sin(angle) * 2
+                );
+                book.rotation.y = angle;
+                goblinGroup.add(book);
+                
+                // 책 회전 애니메이션
+                gsap.to(book.rotation, {
+                    y: angle + Math.PI * 2,
+                    duration: 8 + i,
+                    repeat: -1,
+                    ease: "none"
+                });
+                
+                // 책 위아래 움직임
+                gsap.to(book.position, {
+                    y: book.position.y + 0.8,
+                    duration: 3 + i * 0.5,
+                    repeat: -1,
+                    yoyo: true,
+                    ease: "sine.inOut"
+                });
+            }
+            
+            // 지혜의 오라
+            const auraGeometry = new THREE.RingGeometry(2.5, 3, 20);
+            const auraMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xd4af37,
+                transparent: true,
+                opacity: 0.2,
+                side: THREE.DoubleSide
+            });
+            const aura = new THREE.Mesh(auraGeometry, auraMaterial);
+            aura.rotation.x = -Math.PI / 2;
+            aura.position.y = 0.1;
+            goblinGroup.add(aura);
+            
+            // 이름표 추가
+            const nameTag = createLibraryGoblinNameTag(goblinData.name, goblinData.specialty);
+            nameTag.position.set(0, 6, 0);
+            goblinGroup.add(nameTag);
+            
+            // 위치 설정 (육각형 배치)
+            const angle = (index / libraryGoblins.length) * Math.PI * 2;
+            const radius = 25;
+            const x = Math.cos(angle) * radius;
+            const z = Math.sin(angle) * radius;
+            goblinGroup.position.set(x, 0, z);
+            
+            goblinGroup.lookAt(0, 1, 0);
+            
+            goblinGroup.userData = {
+                goblinData: goblinData,
+                index: index,
+                isLibraryGoblin: true
+            };
+            
+            // 학술적 애니메이션
+            gsap.to(goblinGroup.position, {
+                y: Math.sin(index * 0.8) * 0.4,
+                duration: 5 + index * 0.4,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            // 오라 회전
+            gsap.to(aura.rotation, {
+                z: Math.PI * 2,
+                duration: 12 + index,
+                repeat: -1,
+                ease: "none"
+            });
+            
+            return goblinGroup;
+        }
+        
+        // 📚 도서관 도깨비 클릭 처리
+        function onLibraryCanvasClick(event) {
+            if (!camera || !scene) return;
+            
+            const rect = renderer.domElement.getBoundingClientRect();
+            const mouse = new THREE.Vector2();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(mouse, camera);
+            
+            const intersects = raycaster.intersectObjects(scene.children, true);
+            
+            if (intersects.length > 0) {
+                let clickedObject = intersects[0].object;
+                
+                while (clickedObject && !clickedObject.userData.isLibraryGoblin) {
+                    clickedObject = clickedObject.parent;
+                }
+                
+                if (clickedObject && clickedObject.userData.isLibraryGoblin) {
+                    const goblinData = clickedObject.userData.goblinData;
+                    selectLibraryGoblin(goblinData);
+                    
+                    gsap.to(clickedObject.scale, {
+                        x: 1.2, y: 1.2, z: 1.2,
+                        duration: 0.2,
+                        yoyo: true,
+                        repeat: 1,
+                        ease: "power2.out"
+                    });
+                }
+            }
+        }
+        
+        // 📚 도서관 도깨비 카드 생성
+        function createLibraryGoblinCards() {
+            const gridElement = document.getElementById('libraryGoblinGrid');
+            
+            libraryGoblins.forEach((goblin, index) => {
+                const card = document.createElement('div');
+                card.className = 'library-goblin-card';
+                card.onclick = () => selectLibraryGoblin(goblin);
+                
+                card.innerHTML = `
+                    <div class="goblin-name">${goblin.name}</div>
+                    <div class="goblin-specialty">${goblin.specialty}</div>
+                    <div style="font-size: 12px; color: #f7dc6f;">${goblin.description}</div>
+                `;
+                
+                gridElement.appendChild(card);
+            });
+        }
+        
+        // 📚 도서관 도깨비 선택
+        function selectLibraryGoblin(goblin) {
+            updateStatus(`📖 ${goblin.name}과 학술 연구를 시작합니다!`);
+            console.log('선택된 도서관 도깨비:', goblin);
+            
+            // 📚 채팅 시스템 열기
+            openChat(goblin);
+            
+            setTimeout(() => {
+                updateStatus(`📚 ${goblin.name}: "${goblin.description}"`);
+            }, 1500);
+        }
+
+        // 📚 채팅 시스템 열기
+        function openChat(goblin) {
+            currentChatGoblin = goblin;
+            
+            const chatContainer = document.getElementById('chatContainer');
+            const chatTitle = document.getElementById('chatTitle');
+            const chatMessages = document.getElementById('chatMessages');
+            
+            chatTitle.textContent = `📚 ${goblin.name}과의 학술 대화`;
+            chatMessages.innerHTML = `
+                <div class="message goblin-message">
+                    <div class="avatar">📚</div>
+                    <div class="text">${goblin.name}: 안녕하세요! 지혜의 도서관에 오신 것을 환영합니다. 어떤 지식에 대해 이야기하고 싶으신가요? 📖✨</div>
+                </div>
+            `;
+            
+            chatContainer.style.display = 'block';
+            document.getElementById('chatInput').focus();
+        }
+
+        // 📚 채팅 시스템 닫기
+        function closeChat() {
+            document.getElementById('chatContainer').style.display = 'none';
+            currentChatGoblin = null;
+        }
+
+        // 📚 채팅 입력 처리
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+
+        // 📚 채팅 메시지 전송
+        function sendChatMessage() {
+            const chatInput = document.getElementById('chatInput');
+            const message = chatInput.value.trim();
+            
+            if (message && currentChatGoblin) {
+                const chatMessages = document.getElementById('chatMessages');
+                
+                // 사용자 메시지 추가
+                chatMessages.innerHTML += `
+                    <div class="message user-message">
+                        <div class="text">${message}</div>
+                        <div class="avatar">👤</div>
+                    </div>
+                `;
+                
+                // 도깨비 응답 생성
+                const response = generateLibraryGoblinResponse(currentChatGoblin, message);
+                
+                setTimeout(() => {
+                    chatMessages.innerHTML += `
+                        <div class="message goblin-message">
+                            <div class="avatar">📚</div>
+                            <div class="text">${currentChatGoblin.name}: ${response}</div>
+                        </div>
+                    `;
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }, 1000);
+                
+                chatInput.value = '';
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+
+        // 📚 도서관 도깨비 AI 응답 생성
+        function generateLibraryGoblinResponse(goblin, userMessage) {
+            const message = userMessage.toLowerCase();
+            
+            // 학술 분야별 전문 응답
+            if (goblin.name === '논문박사') {
+                if (message.includes('논문') || message.includes('연구') || message.includes('학술')) {
+                    return "논문 작성의 핵심은 명확한 연구 문제 설정과 체계적인 방법론입니다. 어떤 분야의 연구를 진행하고 계신가요? 📄✨";
+                } else if (message.includes('방법론') || message.includes('실험')) {
+                    return "연구 방법론은 정량적 연구와 정성적 연구로 나뉩니다. 각각의 장단점을 고려하여 연구 목적에 맞는 방법을 선택하는 것이 중요하죠! 🔬📊";
+                } else if (message.includes('인용') || message.includes('참고문헌')) {
+                    return "올바른 인용은 학술적 신뢰성의 기본입니다. APA, MLA, Chicago 등 다양한 인용 스타일이 있으니 학회 규정을 확인해보세요! 📚📝";
+                }
+            } else if (goblin.name === '철학현자') {
+                if (message.includes('철학') || message.includes('사고') || message.includes('진리')) {
+                    return "철학은 근본적인 질문을 던지는 학문입니다. '나는 누구인가?', '무엇이 옳은가?'와 같은 질문들을 함께 탐구해봅시다! 🤔💭";
+                } else if (message.includes('윤리') || message.includes('도덕')) {
+                    return "윤리학은 옳고 그름을 판단하는 기준을 연구합니다. 칸트의 의무론, 공리주의, 덕윤리학 등 다양한 관점이 있어요! ⚖️🌟";
+                } else if (message.includes('존재') || message.includes('의미')) {
+                    return "존재론적 질문은 인간의 본질에 대한 탐구입니다. 사르트르는 '존재가 본질에 앞선다'고 했죠. 어떻게 생각하시나요? 🌌✨";
+                }
+            } else if (goblin.name === '역사학자') {
+                if (message.includes('역사') || message.includes('과거') || message.includes('문명')) {
+                    return "역사는 과거를 통해 현재를 이해하고 미래를 준비하는 학문입니다. 어떤 시대나 문명에 관심이 있으신가요? 🏛️📜";
+                } else if (message.includes('전쟁') || message.includes('혁명')) {
+                    return "역사의 큰 변화는 종종 갈등과 혁명을 통해 일어났습니다. 프랑스 혁명, 산업혁명 등 인류사의 전환점들을 연구해보세요! ⚔️🔥";
+                } else if (message.includes('문화') || message.includes('전통')) {
+                    return "문화사 연구는 당시 사람들의 일상과 사고방식을 이해하는 데 중요합니다. 문헌 자료와 고고학적 증거를 종합적으로 분석해야 해요! 🎭🏺";
+                }
+            } else if (goblin.name === '과학탐구') {
+                if (message.includes('과학') || message.includes('실험') || message.includes('연구')) {
+                    return "과학은 가설 설정, 실험 설계, 데이터 분석의 체계적 과정입니다. 어떤 분야의 과학 연구에 관심이 있으신가요? 🔬🧪";
+                } else if (message.includes('물리') || message.includes('화학') || message.includes('생물')) {
+                    return "자연과학의 기본 분야들은 모두 상호 연결되어 있습니다. 물리학의 법칙이 화학 반응을 설명하고, 생명 현상의 기초가 되죠! ⚛️🧬";
+                } else if (message.includes('발견') || message.includes('혁신')) {
+                    return "과학사의 위대한 발견들은 기존 패러다임을 바꾸었습니다. 뉴턴의 역학, 아인슈타인의 상대성 이론처럼 말이에요! 🌟🚀";
+                }
+            } else if (goblin.name === '언어학자') {
+                if (message.includes('언어') || message.includes('문법') || message.includes('어학')) {
+                    return "언어학은 인간의 소통 체계를 과학적으로 연구하는 학문입니다. 음성학, 형태학, 의미학 등 다양한 분야가 있어요! 🗣️📖";
+                } else if (message.includes('번역') || message.includes('통역')) {
+                    return "번역은 단순한 언어 변환이 아닌 문화 간 소통의 예술입니다. 원문의 의미와 맥락을 정확히 전달하는 것이 핵심이죠! 🌍💬";
+                } else if (message.includes('방언') || message.includes('사투리')) {
+                    return "방언 연구는 언어의 지역적 변이를 탐구합니다. 각 지역의 방언은 그 지역의 역사와 문화를 반영하는 소중한 자료예요! 🗺️🎭";
+                }
+            } else if (goblin.name === '수학천재') {
+                if (message.includes('수학') || message.includes('계산') || message.includes('공식')) {
+                    return "수학은 논리와 추상적 사고의 아름다움을 보여주는 학문입니다. 어떤 수학 분야에 관심이 있으신가요? 🔢✨";
+                } else if (message.includes('증명') || message.includes('정리')) {
+                    return "수학적 증명은 엄밀한 논리적 추론의 과정입니다. 유클리드 기하학부터 현대 추상대수학까지, 증명의 아름다움을 느껴보세요! 📐🎯";
+                } else if (message.includes('응용') || message.includes('실생활')) {
+                    return "수학은 물리학, 경제학, 컴퓨터과학 등 모든 분야의 기초입니다. 순수수학의 아름다움과 응용수학의 실용성 모두 중요해요! 💡🌟";
+                }
+            }
+            
+            // 일반적인 학술 응답
+            const generalResponses = [
+                `${goblin.name}이 ${goblin.description.slice(0, 50)}... 더 자세히 알고 싶은 것이 있으신가요? 📚✨`,
+                "지혜의 도서관에는 수많은 지식이 담겨 있습니다. 함께 탐구해봅시다! 🔍📖",
+                "학문의 길은 끝없는 호기심에서 시작됩니다. 어떤 것이 궁금하신가요? 🤔💭",
+                "지식은 나누면 나눌수록 더욱 풍성해집니다. 함께 학습해봅시다! 🌱📚",
+                "진정한 지혜는 '나는 모른다'는 것을 아는 것입니다. 소크라테스의 말처럼요! 🧠✨"
+            ];
+            
+            return generalResponses[Math.floor(Math.random() * generalResponses.length)];
+        }
+        
+        // 📚 도서관 환경 생성
+        function createLibraryEnvironment() {
+            // 📚 거대한 책장들
+            for (let i = 0; i < 20; i++) {
+                createBookshelf();
+            }
+            
+            // 📖 떠다니는 책들
+            for (let i = 0; i < 30; i++) {
+                createFloatingBook();
+            }
+            
+            // 🕯️ 고전 램프들
+            for (let i = 0; i < 12; i++) {
+                createClassicLamp();
+            }
+            
+            // 📜 지혜의 조명
+            createWisdomLighting();
+        }
+        
+        // 📚 책장 생성
+        function createBookshelf() {
+            const shelfGroup = new THREE.Group();
+            
+            // 책장 프레임
+            const frameGeometry = new THREE.BoxGeometry(8, 12, 1);
+            const frameMaterial = new THREE.MeshPhongMaterial({ color: 0x8b4513 });
+            const frame = new THREE.Mesh(frameGeometry, frameMaterial);
+            shelfGroup.add(frame);
+            
+            // 책들
+            for (let shelf = 0; shelf < 4; shelf++) {
+                for (let book = 0; book < 15; book++) {
+                    const bookGeometry = new THREE.BoxGeometry(0.3, 1.5, 0.8);
+                    const bookColors = [0x8b4513, 0x2c3e50, 0xd4af37, 0x27ae60, 0x3498db, 0x9b59b6, 0xe74c3c];
+                    const bookMaterial = new THREE.MeshPhongMaterial({ 
+                        color: bookColors[Math.floor(Math.random() * bookColors.length)]
+                    });
+                    const bookMesh = new THREE.Mesh(bookGeometry, bookMaterial);
+                    
+                    bookMesh.position.set(
+                        -3.5 + book * 0.5,
+                        -4 + shelf * 2.5,
+                        0.6
+                    );
+                    shelfGroup.add(bookMesh);
+                }
+            }
+            
+            const x = (Math.random() - 0.5) * 100;
+            const z = (Math.random() - 0.5) * 100;
+            shelfGroup.position.set(x, 6, z);
+            shelfGroup.rotation.y = Math.random() * Math.PI * 2;
+            
+            scene.add(shelfGroup);
+        }
+        
+        // 📖 떠다니는 책 생성
+        function createFloatingBook() {
+            const bookGeometry = new THREE.BoxGeometry(0.4, 0.6, 0.1);
+            const bookColors = [0x8b4513, 0x2c3e50, 0xd4af37, 0x27ae60, 0x3498db, 0x9b59b6, 0xe74c3c];
+            const bookMaterial = new THREE.MeshPhongMaterial({ 
+                color: bookColors[Math.floor(Math.random() * bookColors.length)],
+                emissive: bookColors[Math.floor(Math.random() * bookColors.length)],
+                emissiveIntensity: 0.1
+            });
+            const book = new THREE.Mesh(bookGeometry, bookMaterial);
+            
+            const x = (Math.random() - 0.5) * 80;
+            const y = 5 + Math.random() * 15;
+            const z = (Math.random() - 0.5) * 80;
+            book.position.set(x, y, z);
+            
+            // 책 페이지 넘김 애니메이션
+            gsap.to(book.rotation, {
+                x: Math.PI * 2,
+                y: Math.PI * 2,
+                duration: 8 + Math.random() * 4,
+                repeat: -1,
+                ease: "none"
+            });
+            
+            // 떠다니는 움직임
+            gsap.to(book.position, {
+                x: x + (Math.random() - 0.5) * 20,
+                y: y + (Math.random() - 0.5) * 8,
+                z: z + (Math.random() - 0.5) * 20,
+                duration: 10 + Math.random() * 5,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            scene.add(book);
+        }
+        
+        // 🕯️ 고전 램프 생성
+        function createClassicLamp() {
+            const lampGroup = new THREE.Group();
+            
+            // 램프 기둥
+            const poleGeometry = new THREE.CylinderGeometry(0.1, 0.1, 8);
+            const poleMaterial = new THREE.MeshPhongMaterial({ color: 0xd4af37 });
+            const pole = new THREE.Mesh(poleGeometry, poleMaterial);
+            pole.position.y = 4;
+            lampGroup.add(pole);
+            
+            // 램프 갓
+            const shadeGeometry = new THREE.CylinderGeometry(1.5, 1, 1);
+            const shadeMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xf1c40f,
+                transparent: true,
+                opacity: 0.8
+            });
+            const shade = new THREE.Mesh(shadeGeometry, shadeMaterial);
+            shade.position.y = 8;
+            lampGroup.add(shade);
+            
+            // 따뜻한 조명
+            const light = new THREE.PointLight(0xffd700, 0.8, 15);
+            light.position.y = 7.5;
+            lampGroup.add(light);
+            
+            const x = (Math.random() - 0.5) * 90;
+            const z = (Math.random() - 0.5) * 90;
+            lampGroup.position.set(x, 0, z);
+            
+            // 부드러운 빛 변화
+            gsap.to(light, {
+                intensity: 0.4,
+                duration: 3 + Math.random() * 2,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            scene.add(lampGroup);
+        }
+        
+        // 📜 지혜의 조명
+        function createWisdomLighting() {
+            const ambientLight = new THREE.AmbientLight(0x8b7355, 0.3);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xd4af37, 0.7);
+            directionalLight.position.set(20, 30, 20);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+            
+            // 황금빛 조명들
+            for (let i = 0; i < 6; i++) {
+                const wisdomLight = new THREE.PointLight(0xd4af37, 0.6, 25);
+                wisdomLight.position.set(
+                    Math.cos(i) * 30,
+                    15,
+                    Math.sin(i) * 30
+                );
+                scene.add(wisdomLight);
+            }
+        }
+        
+        // 📚 지혜의 도서관 초기화
+        function initLibraryDistrict() {
+            console.log('📚 지혜의 도서관 초기화 시작...');
+            
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x2c1810);
+            
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 25, 35);
+            
+            const canvas = document.getElementById('library-canvas');
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            
+            // 📚 도서관 환경 생성
+            createLibraryEnvironment();
+            
+            // 📚 3D 도서관 도깨비들 생성
+            createLibrary3DGoblins();
+            
+            // 📚 도서관 도깨비 카드 생성
+            createLibraryGoblinCards();
+            
+            // 🖱️ 캔버스 클릭 이벤트 추가
+            canvas.addEventListener('click', onLibraryCanvasClick);
+            
+            isSystemReady = true;
+            updateStatus('📚 지혜의 도서관이 완성되었습니다! 무한한 지식을 탐험하세요!');
+            
+            animate();
+        }
+        
+        // 🎬 애니메이션 루프
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (controls) {
+                controls.update();
+            }
+            
+            if (avatar && controls) {
+                controls.target.copy(avatar.position);
+                controls.target.y += 1;
+            }
+            
+            // 🏷️ 모든 이름표들이 카메라를 바라보도록 업데이트
+            scene.traverse((object) => {
+                if (object.userData && object.userData.isNameTag && camera) {
+                    object.lookAt(camera.position);
+                }
+            });
+            
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+        
+        // 📱 윈도우 리사이즈 처리
+        window.addEventListener('resize', () => {
+            if (camera && renderer) {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        });
+        
+        // 🚀 지혜의 도서관 시작
+        window.addEventListener('load', () => {
+            initLibraryDistrict();
+        });
+    </script>
+</body>
+</html>

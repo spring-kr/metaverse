@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏙️ 미래 도시 - 도깨비 메타버스</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f1419 0%, #1a252f 50%, #2c3e50 100%);
+            color: white;
+            overflow: hidden;
+        }
+        
+        #future-city-canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            cursor: crosshair;
+        }
+        
+        /* 메인 UI 컨테이너 */
+        .ui-container {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        
+        .ui-container > * {
+            pointer-events: auto;
+        }
+        
+        /* 상태 표시 */
+        .status-display {
+            background: rgba(15, 20, 25, 0.9);
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3);
+        }
+        
+        /* 컨트롤 패널 */
+        .control-panel {
+            background: rgba(15, 20, 25, 0.95);
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.4);
+            min-width: 300px;
+        }
+        
+        .control-btn {
+            background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+            border: none;
+            border-radius: 8px;
+            color: #0f1419;
+            padding: 12px 16px;
+            margin: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.4);
+        }
+        
+        /* 뒤로가기 버튼 */
+        .back-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1001;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            padding: 15px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+        
+        /* 미래 도깨비 카드 */
+        .future-goblin-card {
+            background: rgba(15, 20, 25, 0.9);
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            padding: 15px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .future-goblin-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 255, 136, 0.3);
+            border-color: #00ffaa;
+        }
+        
+        .goblin-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #00ff88;
+            margin-bottom: 8px;
+        }
+        
+        .goblin-specialty {
+            font-size: 14px;
+            color: #00ffaa;
+            margin-bottom: 5px;
+        }
+
+        /* 🏙️ 미래 채팅 시스템 */
+        .chat-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 350px;
+            height: 500px;
+            background: linear-gradient(135deg, rgba(15, 20, 25, 0.95), rgba(0, 255, 136, 0.1));
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            display: none;
+            flex-direction: column;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+            z-index: 1000;
+        }
+
+        .chat-header {
+            background: linear-gradient(90deg, #0a0f14, #00ff88);
+            color: white;
+            padding: 15px;
+            border-radius: 13px 13px 0 0;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #00ff88;
+        }
+
+        .chat-close {
+            background: none;
+            border: none;
+            color: #00ff88;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .chat-close:hover {
+            background: rgba(0, 255, 136, 0.2);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: rgba(15, 20, 25, 0.8);
+        }
+
+        .message {
+            margin: 10px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .message.user-message {
+            flex-direction: row-reverse;
+        }
+
+        .message .avatar {
+            min-width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00ff88, #00ffaa);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #0a0f14;
+        }
+
+        .message.user-message .avatar {
+            background: linear-gradient(135deg, #00cc66, #00ff99);
+        }
+
+        .message .text {
+            background: rgba(0, 255, 136, 0.2);
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 250px;
+            word-wrap: break-word;
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            color: #e0fff0;
+        }
+
+        .message.user-message .text {
+            background: rgba(0, 255, 170, 0.2);
+            border-color: rgba(0, 255, 170, 0.3);
+        }
+
+        .chat-input-container {
+            padding: 15px;
+            border-top: 1px solid rgba(0, 255, 136, 0.3);
+            background: rgba(15, 20, 25, 0.9);
+            border-radius: 0 0 13px 13px;
+        }
+
+        .chat-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #00ff88;
+            border-radius: 20px;
+            background: rgba(15, 20, 25, 0.8);
+            color: #e0fff0;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: #00ffaa;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+
+        .chat-input::placeholder {
+            color: #00ffaa;
+        }
+    </style>
+</head>
+<body>
+    <!-- 뒤로가기 버튼 -->
+    <button class="back-btn" onclick="goBackToVillage()">← 🏘️ 도깨비 마을로</button>
+    
+    <!-- 메인 캔버스 -->
+    <canvas id="future-city-canvas"></canvas>
+    
+    <!-- UI 컨테이너 -->
+    <div class="ui-container">
+        <!-- 상태 표시 -->
+        <div class="status-display" id="statusDisplay">
+            🏙️ 미래 도시에 오신 것을 환영합니다!
+        </div>
+        
+        <!-- 🏙️ 채팅 시스템 -->
+        <div class="chat-container" id="chatContainer">
+            <div class="chat-header">
+                <span id="chatTitle">🏙️ 미래 도깨비와의 대화</span>
+                <button class="chat-close" onclick="closeChat()">×</button>
+            </div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input-container">
+                <input type="text" class="chat-input" id="chatInput" 
+                       placeholder="미래 기술에 대해 질문해보세요..." 
+                       onkeypress="handleChatKeyPress(event)">
+            </div>
+        </div>
+        
+        <!-- 컨트롤 패널 -->
+        <div class="control-panel">
+            <h2 style="color: #00ff88; margin-bottom: 15px; text-align: center;">🏙️ 미래 도시</h2>
+            
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: #00ff88; margin-bottom: 10px; font-size: 16px;">🎮 컨트롤</h3>
+                <button class="control-btn" onclick="toggleAvatar()">🤖 사이버 아바타</button>
+                <button class="control-btn" onclick="resetCamera()">📷 카메라 리셋</button>
+                <button class="control-btn" onclick="toggleDistrict()">🌆 구역 변경</button>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: #00ff88; margin-bottom: 10px; font-size: 16px;">🤖 미래 도깨비들</h3>
+                <div id="futureGoblinGrid">
+                    <!-- 미래 도깨비들이 여기에 생성됩니다 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Three.js 및 GSAP 라이브러리 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+    <script>
+        // 🏙️ 미래 도시 전역 변수
+        let scene, camera, renderer, controls;
+        let currentChatGoblin = null; // 🏙️ 현재 채팅 중인 도깨비
+        let avatar = null;
+        let isSystemReady = false;
+        
+        // 🤖 미래의 도깨비들
+        const futureGoblins = [
+            { name: '🤖 AI 개발자', specialty: '인공지능', description: '차세대 AI 시스템을 설계하는 도깨비', emoji: '🤖', color: 0x00ff88 },
+            { name: '🚁 드론 조종사', specialty: '무인 항공', description: '스마트 드론 시스템을 관리하는 도깨비', emoji: '🚁', color: 0x3498db },
+            { name: '🌐 네트워크 마법사', specialty: '초연결성', description: '미래 네트워크를 구축하는 도깨비', emoji: '🌐', color: 0x9b59b6 },
+            { name: '⚡ 에너지 엔지니어', specialty: '신재생 에너지', description: '무한 에너지를 연구하는 도깨비', emoji: '⚡', color: 0xf1c40f },
+            { name: '🛸 우주 탐험가', specialty: '우주 여행', description: '은하계를 탐험하는 모험가 도깨비', emoji: '🛸', color: 0xe74c3c },
+            { name: '🔬 나노 과학자', specialty: '나노 기술', description: '분자 수준에서 작업하는 도깨비', emoji: '🔬', color: 0x2ecc71 }
+        ];
+        
+        // 🎯 상태 업데이트 함수
+        function updateStatus(message) {
+            const statusElement = document.getElementById('statusDisplay');
+            if (statusElement) {
+                statusElement.textContent = message;
+            }
+        }
+        
+        // 🔙 도깨비 마을로 돌아가기
+        function goBackToVillage() {
+            updateStatus('🏘️ 도깨비 마을로 돌아가는 중...');
+            // GitHub Pages용 베이스 URL 계산
+            const baseURL = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/');
+            setTimeout(() => {
+                window.location.href = baseURL + 'index.html';
+            }, 1000);
+        }
+        
+        // 🎮 아바타 토글
+        function toggleAvatar() {
+            if (!avatar) {
+                createAvatar();
+            } else {
+                removeAvatar();
+            }
+        }
+        
+        // 🤖 사이버 아바타 생성
+        function createAvatar() {
+            avatar = new THREE.Group();
+            
+            // 사이버 슈트 (밝은 청색)
+            const bodyGeometry = new THREE.CylinderGeometry(0.5, 0.7, 2.2);
+            const bodyMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x1a252f,
+                emissive: 0x00ff88,
+                emissiveIntensity: 0.3,
+                shininess: 100
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 1.1;
+            avatar.add(body);
+            
+            // 사이버 헬멧 머리
+            const headGeometry = new THREE.SphereGeometry(0.5);
+            const headMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x0f1419,
+                emissive: 0x00ff88,
+                emissiveIntensity: 0.4,
+                shininess: 100
+            });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 2.7;
+            avatar.add(head);
+            
+            // 홀로그램 바이저
+            const visorGeometry = new THREE.RingGeometry(0.3, 0.45, 16);
+            const visorMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x00ffaa,
+                transparent: true,
+                opacity: 0.7,
+                side: THREE.DoubleSide
+            });
+            const visor = new THREE.Mesh(visorGeometry, visorMaterial);
+            visor.position.set(0, 2.7, 0.5);
+            avatar.add(visor);
+            
+            // 에너지 코어 (가슴)
+            const coreGeometry = new THREE.SphereGeometry(0.15);
+            const coreMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x00ff88,
+                emissive: 0x00ff88,
+                emissiveIntensity: 0.8
+            });
+            const core = new THREE.Mesh(coreGeometry, coreMaterial);
+            core.position.set(0, 1.8, 0.5);
+            avatar.add(core);
+            
+            // 사이버 팔 (오른쪽)
+            const armGeometry = new THREE.CylinderGeometry(0.1, 0.15, 1.5);
+            const armMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x1a252f,
+                emissive: 0x00ff88,
+                emissiveIntensity: 0.2
+            });
+            const rightArm = new THREE.Mesh(armGeometry, armMaterial);
+            rightArm.position.set(0.8, 1.5, 0);
+            rightArm.rotation.z = 0.3;
+            avatar.add(rightArm);
+            
+            // 홀로그램 디스플레이 (왼손)
+            const holoGeometry = new THREE.PlaneGeometry(0.6, 0.4);
+            const holoMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x00ffaa,
+                transparent: true,
+                opacity: 0.6,
+                side: THREE.DoubleSide
+            });
+            const holo = new THREE.Mesh(holoGeometry, holoMaterial);
+            holo.position.set(-0.8, 1.8, 0);
+            holo.rotation.y = 0.3;
+            avatar.add(holo);
+            
+            // 사이버 오라 (원형 에너지 필드들)
+            for (let i = 0; i < 5; i++) {
+                const auraGeometry = new THREE.RingGeometry(0.8 + i * 0.4, 1.2 + i * 0.4, 20);
+                const auraMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0x00ff88,
+                    transparent: true,
+                    opacity: 0.3 - i * 0.04,
+                    side: THREE.DoubleSide
+                });
+                const aura = new THREE.Mesh(auraGeometry, auraMaterial);
+                aura.rotation.x = -Math.PI / 2;
+                aura.position.y = 0.1;
+                avatar.add(aura);
+                
+                gsap.to(aura.rotation, {
+                    z: Math.PI * 2,
+                    duration: 4 - i * 0.3,
+                    repeat: -1,
+                    ease: "none"
+                });
+            }
+            
+            // 에너지 코어 펄스 애니메이션
+            gsap.to(core.scale, {
+                x: 1.5, y: 1.5, z: 1.5,
+                duration: 1.5,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            // 바이저 깜빡임
+            gsap.to(visor.material, {
+                opacity: 0.3,
+                duration: 2,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            avatar.position.set(0, 0, 0);
+            scene.add(avatar);
+            
+            if (camera && controls) {
+                gsap.to(camera.position, {
+                    x: 6, y: 10, z: 15,
+                    duration: 1.5,
+                    ease: "power2.out"
+                });
+                gsap.to(controls.target, {
+                    x: 0, y: 1, z: 0,
+                    duration: 1.5,
+                    ease: "power2.out",
+                    onUpdate: () => controls.update()
+                });
+            }
+            
+            updateStatus('🤖 사이버 아바타가 미래 모드로 활성화되었습니다!');
+        }
+        
+        // 🤖 아바타 제거
+        function removeAvatar() {
+            if (avatar) {
+                while(avatar.children.length > 0) {
+                    const child = avatar.children[0];
+                    avatar.remove(child);
+                    if (child.geometry) child.geometry.dispose();
+                    if (child.material) child.material.dispose();
+                }
+                scene.remove(avatar);
+                avatar = null;
+                updateStatus('👋 사이버 아바타가 시스템에서 로그아웃했습니다');
+            }
+        }
+        
+        // 📷 카메라 리셋
+        function resetCamera() {
+            if (camera && controls) {
+                gsap.to(camera.position, {
+                    x: 0, y: 25, z: 35,
+                    duration: 1.5,
+                    ease: "power2.out"
+                });
+                gsap.to(controls.target, {
+                    x: 0, y: 0, z: 0,
+                    duration: 1.5,
+                    ease: "power2.out",
+                    onUpdate: () => controls.update()
+                });
+                updateStatus('📷 카메라가 미래 도시 중앙으로 리셋되었습니다');
+            }
+        }
+        
+        // 🌆 구역 변경
+        function toggleDistrict() {
+            const districts = ['🏢 비즈니스 타워', '🤖 AI 연구소', '🚁 드론 허브', '⚡ 에너지 센터', '🛸 우주 포트'];
+            const randomDistrict = districts[Math.floor(Math.random() * districts.length)];
+            updateStatus(`🌆 현재 위치: ${randomDistrict}`);
+        }
+        
+        // 🏷️ 미래 도깨비 이름표 생성
+        function createFutureGoblinNameTag(name, specialty) {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = 512;
+            canvas.height = 256;
+            
+            // 사이버 배경 그라디언트
+            const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, 'rgba(15, 20, 25, 0.95)');
+            gradient.addColorStop(0.5, 'rgba(26, 37, 47, 0.9)');
+            gradient.addColorStop(1, 'rgba(44, 62, 80, 0.95)');
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 네온 테두리
+            context.strokeStyle = '#00ff88';
+            context.lineWidth = 4;
+            context.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
+            
+            // 내부 네온 테두리
+            context.strokeStyle = '#00ffaa';
+            context.lineWidth = 2;
+            context.strokeRect(12, 12, canvas.width - 24, canvas.height - 24);
+            
+            // 이름 텍스트 (사이버 폰트)
+            context.shadowColor = '#00ff88';
+            context.shadowBlur = 10;
+            context.fillStyle = '#00ff88';
+            context.font = 'bold 38px monospace';
+            context.textAlign = 'center';
+            context.fillText(name, canvas.width / 2, 80);
+            
+            // 전문 분야 텍스트
+            context.shadowBlur = 6;
+            context.fillStyle = '#00ffaa';
+            context.font = '26px monospace';
+            context.fillText(specialty, canvas.width / 2, 130);
+            
+            // 사이버 회로 라인들
+            context.shadowBlur = 0;
+            context.strokeStyle = '#00ff88';
+            context.lineWidth = 2;
+            
+            // 수평 라인
+            context.beginPath();
+            context.moveTo(50, 150);
+            context.lineTo(canvas.width - 50, 150);
+            context.stroke();
+            
+            // 회로 패턴
+            for (let i = 0; i < 8; i++) {
+                const x = 80 + i * 50;
+                const y = 190;
+                
+                // 회로 칩들
+                context.fillStyle = '#00ff88';
+                context.fillRect(x - 10, y - 8, 20, 16);
+                
+                // 내부 회로
+                context.fillStyle = '#0f1419';
+                context.fillRect(x - 6, y - 4, 12, 8);
+                
+                // 연결선들
+                if (i < 7) {
+                    context.strokeStyle = '#00ffaa';
+                    context.lineWidth = 1;
+                    context.beginPath();
+                    context.moveTo(x + 10, y);
+                    context.lineTo(x + 40, y);
+                    context.stroke();
+                }
+            }
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+            
+            const planeGeometry = new THREE.PlaneGeometry(4, 2);
+            const planeMaterial = new THREE.MeshBasicMaterial({ 
+                map: texture, 
+                transparent: true,
+                side: THREE.DoubleSide
+            });
+            
+            const nameTagMesh = new THREE.Mesh(planeGeometry, planeMaterial);
+            nameTagMesh.userData.isNameTag = true;
+            
+            return nameTagMesh;
+        }
+        
+        // 🤖 3D 미래 도깨비들 생성
+        function createFuture3DGoblins() {
+            futureGoblins.forEach((goblin, index) => {
+                const goblin3D = createFuture3DGoblin(goblin, index);
+                scene.add(goblin3D);
+            });
+        }
+        
+        // 🤖 개별 3D 미래 도깨비 생성
+        function createFuture3DGoblin(goblinData, index) {
+            const goblinGroup = new THREE.Group();
+            
+            // 사이버 슈트 몸체
+            const bodyGeometry = new THREE.CylinderGeometry(0.8, 1.2, 2.5);
+            const bodyMaterial = new THREE.MeshPhongMaterial({ 
+                color: goblinData.color,
+                emissive: goblinData.color,
+                emissiveIntensity: 0.2,
+                shininess: 100
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 1.25;
+            goblinGroup.add(body);
+            
+            // 사이버 헬멧 머리
+            const headGeometry = new THREE.SphereGeometry(0.7);
+            const headMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x0f1419,
+                emissive: goblinData.color,
+                emissiveIntensity: 0.3,
+                shininess: 100
+            });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 3.2;
+            goblinGroup.add(head);
+            
+            // 홀로그램 바이저
+            const visorGeometry = new THREE.RingGeometry(0.4, 0.6, 16);
+            const visorMaterial = new THREE.MeshBasicMaterial({ 
+                color: goblinData.color,
+                transparent: true,
+                opacity: 0.8,
+                side: THREE.DoubleSide
+            });
+            const visor = new THREE.Mesh(visorGeometry, visorMaterial);
+            visor.position.set(0, 3.2, 0.6);
+            goblinGroup.add(visor);
+            
+            // 에너지 코어
+            const coreGeometry = new THREE.SphereGeometry(0.2);
+            const coreMaterial = new THREE.MeshBasicMaterial({ 
+                color: goblinData.color,
+                emissive: goblinData.color,
+                emissiveIntensity: 1
+            });
+            const core = new THREE.Mesh(coreGeometry, coreMaterial);
+            core.position.set(0, 1.8, 0.6);
+            goblinGroup.add(core);
+            
+            // 떠다니는 홀로그램 패널들
+            for (let i = 0; i < 8; i++) {
+                const panelGeometry = new THREE.PlaneGeometry(0.4, 0.3);
+                const panelMaterial = new THREE.MeshBasicMaterial({ 
+                    color: goblinData.color,
+                    transparent: true,
+                    opacity: 0.7,
+                    side: THREE.DoubleSide
+                });
+                const panel = new THREE.Mesh(panelGeometry, panelMaterial);
+                
+                const angle = (i / 8) * Math.PI * 2;
+                panel.position.set(
+                    Math.cos(angle) * 2.5,
+                    3 + Math.sin(i) * 0.8,
+                    Math.sin(angle) * 2.5
+                );
+                panel.rotation.y = angle + Math.PI / 2;
+                goblinGroup.add(panel);
+                
+                // 홀로그램 회전 애니메이션
+                gsap.to(panel.rotation, {
+                    y: panel.rotation.y + Math.PI * 2,
+                    duration: 6 + i * 0.3,
+                    repeat: -1,
+                    ease: "none"
+                });
+                
+                // 홀로그램 위아래 움직임
+                gsap.to(panel.position, {
+                    y: panel.position.y + 1.2,
+                    duration: 4 + i * 0.2,
+                    repeat: -1,
+                    yoyo: true,
+                    ease: "sine.inOut"
+                });
+            }
+            
+            // 에너지 필드
+            const fieldGeometry = new THREE.RingGeometry(3, 3.5, 24);
+            const fieldMaterial = new THREE.MeshBasicMaterial({ 
+                color: goblinData.color,
+                transparent: true,
+                opacity: 0.15,
+                side: THREE.DoubleSide
+            });
+            const field = new THREE.Mesh(fieldGeometry, fieldMaterial);
+            field.rotation.x = -Math.PI / 2;
+            field.position.y = 0.1;
+            goblinGroup.add(field);
+            
+            // 이름표 추가
+            const nameTag = createFutureGoblinNameTag(goblinData.name, goblinData.specialty);
+            nameTag.position.set(0, 6.5, 0);
+            goblinGroup.add(nameTag);
+            
+            // 위치 설정 (육각형 배치)
+            const angle = (index / futureGoblins.length) * Math.PI * 2;
+            const radius = 25;
+            const x = Math.cos(angle) * radius;
+            const z = Math.sin(angle) * radius;
+            goblinGroup.position.set(x, 0, z);
+            
+            goblinGroup.lookAt(0, 1, 0);
+            
+            goblinGroup.userData = {
+                goblinData: goblinData,
+                index: index,
+                isFutureGoblin: true
+            };
+            
+            // 사이버 애니메이션들
+            
+            // 에너지 코어 펄스
+            gsap.to(core.scale, {
+                x: 1.8, y: 1.8, z: 1.8,
+                duration: 2 + index * 0.2,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            // 바이저 깜빡임
+            gsap.to(visor.material, {
+                opacity: 0.3,
+                duration: 3 + index * 0.3,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            // 에너지 필드 회전
+            gsap.to(field.rotation, {
+                z: Math.PI * 2,
+                duration: 8 + index * 0.5,
+                repeat: -1,
+                ease: "none"
+            });
+            
+            // 부드러운 부유 애니메이션
+            gsap.to(goblinGroup.position, {
+                y: Math.sin(index * 1.2) * 0.6,
+                duration: 6 + index * 0.3,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            return goblinGroup;
+        }
+        
+        // 🤖 미래 도깨비 클릭 처리
+        function onFutureCityCanvasClick(event) {
+            if (!camera || !scene) return;
+            
+            const rect = renderer.domElement.getBoundingClientRect();
+            const mouse = new THREE.Vector2();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(mouse, camera);
+            
+            const intersects = raycaster.intersectObjects(scene.children, true);
+            
+            if (intersects.length > 0) {
+                let clickedObject = intersects[0].object;
+                
+                while (clickedObject && !clickedObject.userData.isFutureGoblin) {
+                    clickedObject = clickedObject.parent;
+                }
+                
+                if (clickedObject && clickedObject.userData.isFutureGoblin) {
+                    const goblinData = clickedObject.userData.goblinData;
+                    selectFutureGoblin(goblinData);
+                    
+                    gsap.to(clickedObject.scale, {
+                        x: 1.2, y: 1.2, z: 1.2,
+                        duration: 0.2,
+                        yoyo: true,
+                        repeat: 1,
+                        ease: "power2.out"
+                    });
+                }
+            }
+        }
+        
+        // 🤖 미래 도깨비 카드 생성
+        function createFutureGoblinCards() {
+            const gridElement = document.getElementById('futureGoblinGrid');
+            
+            futureGoblins.forEach((goblin, index) => {
+                const card = document.createElement('div');
+                card.className = 'future-goblin-card';
+                card.onclick = () => selectFutureGoblin(goblin);
+                
+                card.innerHTML = `
+                    <div class="goblin-name">${goblin.name}</div>
+                    <div class="goblin-specialty">${goblin.specialty}</div>
+                    <div style="font-size: 12px; color: #7dd3fc;">${goblin.description}</div>
+                `;
+                
+                gridElement.appendChild(card);
+            });
+        }
+        
+        // 🤖 미래 도깨비 선택
+        function selectFutureGoblin(goblin) {
+            updateStatus(`🤖 ${goblin.name}과 미래 기술 협업을 시작합니다!`);
+            console.log('선택된 미래 도깨비:', goblin);
+            
+            // 🏙️ 채팅 시스템 열기
+            openChat(goblin);
+            
+            setTimeout(() => {
+                updateStatus(`🔮 ${goblin.name}: "${goblin.description}"`);
+            }, 1500);
+        }
+
+        // 🏙️ 채팅 시스템 열기
+        function openChat(goblin) {
+            currentChatGoblin = goblin;
+            
+            const chatContainer = document.getElementById('chatContainer');
+            const chatTitle = document.getElementById('chatTitle');
+            const chatMessages = document.getElementById('chatMessages');
+            
+            chatTitle.textContent = `🏙️ ${goblin.name}과의 미래 대화`;
+            chatMessages.innerHTML = `
+                <div class="message goblin-message">
+                    <div class="avatar">🤖</div>
+                    <div class="text">${goblin.name}: 안녕하세요! 미래 도시에 오신 것을 환영합니다. 어떤 미래 기술에 대해 이야기하고 싶으신가요? 🚀✨</div>
+                </div>
+            `;
+            
+            chatContainer.style.display = 'flex';
+            document.getElementById('chatInput').focus();
+        }
+
+        // 🏙️ 채팅 시스템 닫기
+        function closeChat() {
+            document.getElementById('chatContainer').style.display = 'none';
+            currentChatGoblin = null;
+        }
+
+        // 🏙️ 채팅 입력 처리
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+
+        // 🏙️ 채팅 메시지 전송
+        function sendChatMessage() {
+            const chatInput = document.getElementById('chatInput');
+            const message = chatInput.value.trim();
+            
+            if (message && currentChatGoblin) {
+                const chatMessages = document.getElementById('chatMessages');
+                
+                // 사용자 메시지 추가
+                chatMessages.innerHTML += `
+                    <div class="message user-message">
+                        <div class="text">${message}</div>
+                        <div class="avatar">👤</div>
+                    </div>
+                `;
+                
+                // 도깨비 응답 생성
+                const response = generateFutureGoblinResponse(currentChatGoblin, message);
+                
+                setTimeout(() => {
+                    chatMessages.innerHTML += `
+                        <div class="message goblin-message">
+                            <div class="avatar">🤖</div>
+                            <div class="text">${currentChatGoblin.name}: ${response}</div>
+                        </div>
+                    `;
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }, 1000);
+                
+                chatInput.value = '';
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+
+        // 🏙️ 미래 도깨비 AI 응답 생성
+        function generateFutureGoblinResponse(goblin, userMessage) {
+            const message = userMessage.toLowerCase();
+            
+            // 미래 기술 분야별 전문 응답
+            if (goblin.name === '양자컴퓨터') {
+                if (message.includes('양자') || message.includes('컴퓨터') || message.includes('큐빗')) {
+                    return "양자컴퓨터는 큐빗의 중첩과 얽힘을 이용해 기존 컴퓨터로는 불가능한 복잡한 계산을 수행합니다! 암호해독, 신약개발, 최적화 문제에 혁명을 일으킬 거예요. ⚛️💻";
+                } else if (message.includes('슈퍼포지션') || message.includes('얽힘')) {
+                    return "양자 중첩은 큐빗이 0과 1을 동시에 존재할 수 있게 하고, 양자 얽힘은 먼 거리의 큐빗들이 순간적으로 정보를 공유하게 합니다. 진정한 마법 같은 물리학이죠! 🌟🔬";
+                } else if (message.includes('미래') || message.includes('응용')) {
+                    return "2030년대에는 양자컴퓨터가 AI 훈련, 날씨 예측, 금융 모델링을 혁신할 것입니다. 구글과 IBM이 이미 큰 발전을 이루고 있어요! 🚀📈";
+                }
+            } else if (goblin.name === '홀로그램박사') {
+                if (message.includes('홀로그램') || message.includes('ar') || message.includes('증강현실')) {
+                    return "홀로그램 기술은 3차원 이미지를 공간에 투영하는 미래의 디스플레이입니다! AR/VR과 결합하여 완전히 새로운 소통 방식을 만들어낼 거예요. 👻✨";
+                } else if (message.includes('교육') || message.includes('의료')) {
+                    return "홀로그램은 교육과 의료 분야를 혁신합니다. 3D 해부학 수업, 원격 수술 지원, 역사 인물과의 대화까지 가능해질 거예요! 🎓⚕️";
+                } else if (message.includes('영화') || message.includes('엔터테인먼트')) {
+                    return "스타워즈의 레이아 공주 홀로그램이 현실이 됩니다! 콘서트, 영화, 게임에서 완전히 새로운 경험을 제공할 거예요. 🎬🎵";
+                }
+            } else if (goblin.name === '우주탐험가') {
+                if (message.includes('우주') || message.includes('화성') || message.includes('달')) {
+                    return "인류의 미래는 우주에 있습니다! 달 기지, 화성 이주, 소행성 채굴까지 우주는 무한한 가능성의 공간이에요. SpaceX와 NASA가 이미 큰 진전을 보이고 있어요! 🚀🌌";
+                } else if (message.includes('우주여행') || message.includes('우주관광')) {
+                    return "2030년대에는 우주 관광이 일반화될 거예요! 블루 오리진, 버진 갤럭틱이 우주 호텔을 건설하고, 일반인도 우주를 경험할 수 있게 될 것입니다. 🏨🌟";
+                } else if (message.includes('외계생명') || message.includes('외계인')) {
+                    return "외계 생명체 발견은 시간 문제입니다! 케플러 망원경과 제임스 웹 망원경이 지구와 비슷한 행성들을 찾고 있어요. 곧 놀라운 소식이 있을 거예요! 👽🔭";
+                }
+            } else if (goblin.name === '나노로봇') {
+                if (message.includes('나노') || message.includes('로봇') || message.includes('의료')) {
+                    return "나노로봇은 혈관 속을 돌아다니며 암세포를 찾아 제거하고, 약물을 정확한 위치에 전달합니다! 의료의 미래를 바꿀 혁신적 기술이에요. 🤖💊";
+                } else if (message.includes('치료') || message.includes('수술')) {
+                    return "미세 수술, 혈전 제거, 면역 시스템 강화까지 나노로봇이 담당할 거예요. 몸속 의사가 24시간 건강을 지켜주는 시대가 올 것입니다! ⚕️🔬";
+                } else if (message.includes('부작용') || message.includes('안전')) {
+                    return "나노로봇은 생체 친화적 소재로 만들어져 부작용을 최소화합니다. 임무 완료 후 자연 분해되어 몸에 해를 끼치지 않아요! 🛡️✨";
+                }
+            } else if (goblin.name === '바이오해커') {
+                if (message.includes('바이오') || message.includes('유전자') || message.includes('크리스퍼')) {
+                    return "유전자 편집 기술로 질병을 근본적으로 치료하고, 인간의 능력을 향상시킬 수 있습니다! CRISPR-Cas9는 생명과학의 혁명이에요. 🧬⚡";
+                } else if (message.includes('노화') || message.includes('수명')) {
+                    return "텔로미어 연장, 세포 재생 기술로 인간의 수명을 크게 늘릴 수 있어요. 150세까지 건강하게 사는 시대가 올지도 몰라요! 👴➡️👦";
+                } else if (message.includes('윤리') || message.includes('문제')) {
+                    return "유전자 편집은 강력한 기술이지만 윤리적 고려가 중요합니다. 치료 목적은 좋지만, 인간 개조는 신중해야 해요. 균형이 필요한 분야죠! ⚖️🤔";
+                }
+            } else if (goblin.name === '메타버스건축가') {
+                if (message.includes('메타버스') || message.includes('가상세계') || message.includes('vr')) {
+                    return "메타버스는 현실과 가상이 융합된 새로운 세계입니다! 가상 부동산, 디지털 아바타, NFT 예술품으로 완전히 새로운 경제가 만들어지고 있어요. 🏗️🌐";
+                } else if (message.includes('회의') || message.includes('업무')) {
+                    return "원격 업무의 미래는 메타버스에 있어요! 가상 오피스에서 아바타로 회의하고, 3D 프레젠테이션으로 협업하는 시대가 왔습니다. 👥💼";
+                } else if (message.includes('교육') || message.includes('학습')) {
+                    return "메타버스 교육은 혁신적입니다! 로마 콜로세움에서 역사를 배우고, 분자 구조 안에서 화학을 공부할 수 있어요. 체험형 학습의 새 시대죠! 🎓🏛️";
+                }
+            }
+            
+            // 일반적인 미래 기술 응답
+            const generalResponses = [
+                `${goblin.name}이 ${goblin.description.slice(0, 50)}... 미래 기술에 대해 더 궁금한 것이 있으신가요? 🤖✨`,
+                "미래는 상상하는 모든 것이 현실이 되는 시대입니다! 어떤 기술이 가장 기대되시나요? 🚀🌟",
+                "과학 기술의 발전 속도는 점점 빨라지고 있어요. 함께 미래를 만들어가봅시다! 💡🔬",
+                "SF 영화 속 기술들이 하나씩 현실이 되고 있어요. 10년 후는 어떨까요? 🎬🔮",
+                "혁신적인 기술은 인류의 삶을 더 풍요롭게 만듭니다. 미래가 정말 기대되네요! 🌈💫"
+            ];
+            
+            return generalResponses[Math.floor(Math.random() * generalResponses.length)];
+        }
+        
+        // 🏙️ 미래 도시 환경 생성
+        function createFutureCityEnvironment() {
+            // 🏢 미래 고층 빌딩들
+            for (let i = 0; i < 25; i++) {
+                createFutureSkyscraper();
+            }
+            
+            // 🚁 떠다니는 드론들
+            for (let i = 0; i < 20; i++) {
+                createFlyingDrone();
+            }
+            
+            // ⚡ 에너지 타워들
+            for (let i = 0; i < 8; i++) {
+                createEnergyTower();
+            }
+            
+            // 🌃 사이버 조명
+            createCyberLighting();
+        }
+        
+        // 🏢 미래 고층 빌딩 생성
+        function createFutureSkyscraper() {
+            const buildingGroup = new THREE.Group();
+            
+            const height = 15 + Math.random() * 25;
+            const width = 3 + Math.random() * 2;
+            
+            // 건물 본체
+            const buildingGeometry = new THREE.BoxGeometry(width, height, width);
+            const buildingMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x1a252f,
+                emissive: 0x00ff88,
+                emissiveIntensity: 0.1,
+                shininess: 100
+            });
+            const building = new THREE.Mesh(buildingGeometry, buildingMaterial);
+            building.position.y = height / 2;
+            buildingGroup.add(building);
+            
+            // 홀로그램 사인
+            const signGeometry = new THREE.PlaneGeometry(width * 0.8, 2);
+            const signMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x00ffaa,
+                transparent: true,
+                opacity: 0.8,
+                side: THREE.DoubleSide
+            });
+            const sign = new THREE.Mesh(signGeometry, signMaterial);
+            sign.position.set(0, height - 2, width / 2 + 0.1);
+            buildingGroup.add(sign);
+            
+            // 건물 창들 (네온 불빛)
+            for (let floor = 0; floor < Math.floor(height / 3); floor++) {
+                for (let window = 0; window < 3; window++) {
+                    if (Math.random() > 0.3) { // 70% 확률로 불 켜짐
+                        const windowGeometry = new THREE.PlaneGeometry(0.3, 0.3);
+                        const windowMaterial = new THREE.MeshBasicMaterial({ 
+                            color: Math.random() > 0.5 ? 0x00ff88 : 0x00ffaa,
+                            emissive: Math.random() > 0.5 ? 0x00ff88 : 0x00ffaa,
+                            emissiveIntensity: 0.8
+                        });
+                        const windowMesh = new THREE.Mesh(windowGeometry, windowMaterial);
+                        windowMesh.position.set(
+                            (window - 1) * 0.8,
+                            2 + floor * 3,
+                            width / 2 + 0.05
+                        );
+                        buildingGroup.add(windowMesh);
+                    }
+                }
+            }
+            
+            const x = (Math.random() - 0.5) * 120;
+            const z = (Math.random() - 0.5) * 120;
+            buildingGroup.position.set(x, 0, z);
+            
+            // 홀로그램 사인 깜빡임
+            gsap.to(sign.material, {
+                opacity: 0.3,
+                duration: 2 + Math.random() * 2,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            scene.add(buildingGroup);
+        }
+        
+        // 🚁 떠다니는 드론 생성
+        function createFlyingDrone() {
+            const droneGroup = new THREE.Group();
+            
+            // 드론 본체
+            const bodyGeometry = new THREE.SphereGeometry(0.3);
+            const bodyMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x2c3e50,
+                emissive: 0x00ff88,
+                emissiveIntensity: 0.3
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            droneGroup.add(body);
+            
+            // 드론 프로펠러들
+            for (let i = 0; i < 4; i++) {
+                const propGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.8);
+                const propMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0x00ffaa,
+                    transparent: true,
+                    opacity: 0.6
+                });
+                const prop = new THREE.Mesh(propGeometry, propMaterial);
+                
+                const angle = (i / 4) * Math.PI * 2;
+                prop.position.set(
+                    Math.cos(angle) * 0.6,
+                    0,
+                    Math.sin(angle) * 0.6
+                );
+                prop.rotation.z = Math.PI / 2;
+                droneGroup.add(prop);
+                
+                // 프로펠러 회전
+                gsap.to(prop.rotation, {
+                    y: Math.PI * 2,
+                    duration: 0.1,
+                    repeat: -1,
+                    ease: "none"
+                });
+            }
+            
+            // LED 라이트
+            const lightGeometry = new THREE.SphereGeometry(0.1);
+            const lightMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x00ff88,
+                emissive: 0x00ff88,
+                emissiveIntensity: 1
+            });
+            const light = new THREE.Mesh(lightGeometry, lightMaterial);
+            light.position.y = -0.3;
+            droneGroup.add(light);
+            
+            const x = (Math.random() - 0.5) * 100;
+            const y = 10 + Math.random() * 20;
+            const z = (Math.random() - 0.5) * 100;
+            droneGroup.position.set(x, y, z);
+            
+            // 드론 순찰 움직임
+            gsap.to(droneGroup.position, {
+                x: x + (Math.random() - 0.5) * 30,
+                y: y + (Math.random() - 0.5) * 10,
+                z: z + (Math.random() - 0.5) * 30,
+                duration: 8 + Math.random() * 4,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            // LED 깜빡임
+            gsap.to(light.material, {
+                emissiveIntensity: 0.3,
+                duration: 1,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            scene.add(droneGroup);
+        }
+        
+        // ⚡ 에너지 타워 생성
+        function createEnergyTower() {
+            const towerGroup = new THREE.Group();
+            
+            // 타워 기둥
+            const poleGeometry = new THREE.CylinderGeometry(0.5, 0.8, 20);
+            const poleMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x2c3e50,
+                emissive: 0x00ff88,
+                emissiveIntensity: 0.2
+            });
+            const pole = new THREE.Mesh(poleGeometry, poleMaterial);
+            pole.position.y = 10;
+            towerGroup.add(pole);
+            
+            // 에너지 구체
+            const sphereGeometry = new THREE.SphereGeometry(1.5);
+            const sphereMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x00ff88,
+                emissive: 0x00ff88,
+                emissiveIntensity: 0.8,
+                transparent: true,
+                opacity: 0.7
+            });
+            const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+            sphere.position.y = 22;
+            towerGroup.add(sphere);
+            
+            // 에너지 링들
+            for (let i = 0; i < 3; i++) {
+                const ringGeometry = new THREE.RingGeometry(2 + i * 0.5, 2.5 + i * 0.5, 16);
+                const ringMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0x00ffaa,
+                    transparent: true,
+                    opacity: 0.6 - i * 0.1,
+                    side: THREE.DoubleSide
+                });
+                const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+                ring.position.y = 22;
+                ring.rotation.x = Math.random() * Math.PI;
+                towerGroup.add(ring);
+                
+                // 링 회전
+                gsap.to(ring.rotation, {
+                    z: Math.PI * 2,
+                    duration: 4 + i,
+                    repeat: -1,
+                    ease: "none"
+                });
+            }
+            
+            const angle = (Math.PI * 2 / 8) * (scene.children.filter(child => 
+                child.userData && child.userData.isEnergyTower).length);
+            const radius = 45;
+            const x = Math.cos(angle) * radius;
+            const z = Math.sin(angle) * radius;
+            towerGroup.position.set(x, 0, z);
+            
+            towerGroup.userData.isEnergyTower = true;
+            
+            // 에너지 구체 펄스
+            gsap.to(sphere.scale, {
+                x: 1.3, y: 1.3, z: 1.3,
+                duration: 3,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            scene.add(towerGroup);
+        }
+        
+        // 🌃 사이버 조명
+        function createCyberLighting() {
+            const ambientLight = new THREE.AmbientLight(0x1a252f, 0.2);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0x00ff88, 0.6);
+            directionalLight.position.set(30, 40, 30);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+            
+            // 네온 조명들
+            for (let i = 0; i < 8; i++) {
+                const neonLight = new THREE.PointLight(0x00ff88, 0.8, 30);
+                neonLight.position.set(
+                    Math.cos(i) * 40,
+                    15,
+                    Math.sin(i) * 40
+                );
+                scene.add(neonLight);
+                
+                // 네온 깜빡임
+                gsap.to(neonLight, {
+                    intensity: 0.3,
+                    duration: 2 + i * 0.2,
+                    repeat: -1,
+                    yoyo: true,
+                    ease: "sine.inOut"
+                });
+            }
+        }
+        
+        // 🏙️ 미래 도시 초기화
+        function initFutureCity() {
+            console.log('🏙️ 미래 도시 초기화 시작...');
+            
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0f1419);
+            
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 25, 35);
+            
+            const canvas = document.getElementById('future-city-canvas');
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            
+            // 🏙️ 미래 도시 환경 생성
+            createFutureCityEnvironment();
+            
+            // 🤖 3D 미래 도깨비들 생성
+            createFuture3DGoblins();
+            
+            // 🤖 미래 도깨비 카드 생성
+            createFutureGoblinCards();
+            
+            // 🖱️ 캔버스 클릭 이벤트 추가
+            canvas.addEventListener('click', onFutureCityCanvasClick);
+            
+            isSystemReady = true;
+            updateStatus('🏙️ 미래 도시가 완성되었습니다! 사이버 세계를 탐험하세요!');
+            
+            animate();
+        }
+        
+        // 🎬 애니메이션 루프
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (controls) {
+                controls.update();
+            }
+            
+            if (avatar && controls) {
+                controls.target.copy(avatar.position);
+                controls.target.y += 1;
+            }
+            
+            // 🏷️ 모든 이름표들이 카메라를 바라보도록 업데이트
+            scene.traverse((object) => {
+                if (object.userData && object.userData.isNameTag && camera) {
+                    object.lookAt(camera.position);
+                }
+            });
+            
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+        
+        // 📱 윈도우 리사이즈 처리
+        window.addEventListener('resize', () => {
+            if (camera && renderer) {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        });
+        
+        // 🚀 미래 도시 시작
+        window.addEventListener('load', () => {
+            initFutureCity();
+        });
+    </script>
+</body>
+</html>

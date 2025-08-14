@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌌 도깨비 메타버스 3D 월드 - 차세대 AI 대화 시스템</title>
+    
+    <!-- Three.js 및 로더들 (ES6 모듈 방식) -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    
+    <!-- GSAP 애니메이션 라이브러리 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            overflow: hidden;
+            height: 100vh;
+            color: white;
+        }
+        
+        /* 🌌 메인 컨테이너 */
+        .main-container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        
+        /* 🎮 3D 메타버스 캔버스 */
+        #metaverse-canvas {
+            flex: 1;
+            cursor: grab;
+            background: linear-gradient(180deg, #000428 0%, #004e92 100%);
+        }
+
+        #metaverse-canvas:active {
+            cursor: grabbing;
+        }
+
+        /* 🧙‍♂️ 왼쪽 도깨비 관리 패널 */
+        .goblin-panel {
+            width: 450px;
+            min-width: 300px;
+            max-width: 600px;
+            background: linear-gradient(135deg, rgba(15, 15, 35, 0.95), rgba(30, 30, 60, 0.9));
+            backdrop-filter: blur(20px);
+            border-right: 3px solid #4ecdc4;
+            border-radius: 0 15px 15px 0;
+            padding: 20px;
+            margin-left: 20px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 5px 0 30px rgba(78, 205, 196, 0.3);
+            position: relative;
+        }
+
+        /* 🔧 리사이즈 핸들 */
+        .resize-handle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 8px;
+            height: 100%;
+            background: linear-gradient(90deg, transparent 0%, rgba(78, 205, 196, 0.3) 50%, rgba(78, 205, 196, 0.6) 100%);
+            cursor: ew-resize;
+            z-index: 1001;
+            transition: background 0.3s ease;
+        }
+
+        .resize-handle:hover {
+            background: linear-gradient(90deg, transparent 0%, rgba(78, 205, 196, 0.5) 50%, rgba(78, 205, 196, 0.8) 100%);
+        }
+
+        .resize-handle::after {
+            content: '⋮⋮';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(78, 205, 196, 0.8);
+            font-size: 12px;
+            letter-spacing: -2px;
+            text-shadow: 0 0 5px rgba(78, 205, 196, 0.5);
+        }
+
+        .panel-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #4ecdc4, #44a08d, #96ceb4);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 25px;
+            text-shadow: 0 0 30px rgba(78, 205, 196, 0.5);
+        }
+
+        /* 📊 시스템 상태 패널 */
+        .status-panel {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(78, 205, 196, 0.3);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .status-value {
+            color: #4ecdc4;
+            font-weight: bold;
+        }
+
+        /* 🎮 컨트롤 버튼들 */
+        .control-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .control-btn {
+            padding: 12px;
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(78, 205, 196, 0.4);
+        }
+
+        /* 🌍 지역별 이동 버튼 스타일 개선 */
+        .region-btn {
+            padding: 14px 16px;
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            margin-bottom: 8px;
+            width: 100%;
+        }
+
+        .region-btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
+            filter: brightness(1.1);
+        }
+
+        .region-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 🧙‍♂️ 도깨비 카드 스타일 */
+        .goblin-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+
+        .goblin-card {
+            background: linear-gradient(135deg, rgba(139, 69, 19, 0.8), rgba(160, 82, 45, 0.6));
+            border: 2px solid transparent;
+            background-clip: padding-box;
+            border-radius: 15px;
+            padding: 18px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .goblin-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .goblin-card:hover::before {
+            opacity: 0.1;
+        }
+
+        .goblin-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(78, 205, 196, 0.4);
+            border-color: #4ecdc4;
+        }
+
+        .goblin-avatar {
+            width: 55px;
+            height: 55px;
+            margin: 0 auto 12px;
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            border: 2px solid #d2691e;
+            box-shadow: 0 5px 15px rgba(78, 205, 196, 0.3);
+        }
+
+        .goblin-name {
+            font-size: 15px;
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 6px;
+        }
+
+        .goblin-role {
+            font-size: 12px;
+            color: #ccc;
+            margin-bottom: 10px;
+        }
+
+        .goblin-status {
+            font-size: 11px;
+            padding: 4px 10px;
+            background: rgba(76, 175, 80, 0.3);
+            border-radius: 10px;
+            color: #4caf50;
+            display: inline-block;
+        }
+
+        /* 📊 우상단 시스템 정보 */
+        .system-info {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(78, 205, 196, 0.3);
+            border-radius: 15px;
+            padding: 15px;
+            z-index: 1001;
+            min-width: 200px;
+        }
+
+        .system-info h3 {
+            color: #4ecdc4;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+
+        /* 💬 채팅 오버레이 */
+        .chat-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chat-window {
+            width: 90%;
+            max-width: 700px;
+            max-height: 85vh;
+            background: linear-gradient(135deg, rgba(78, 205, 196, 0.1), rgba(68, 160, 141, 0.1));
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(78, 205, 196, 0.3);
+            border-radius: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+
+        .close-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .chat-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+
+        .chat-input-area {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid rgba(78, 205, 196, 0.3);
+            border-radius: 25px;
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .chat-input:focus {
+            border-color: #4ecdc4;
+        }
+
+        .send-button {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .send-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(78, 205, 196, 0.4);
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 15px;
+            max-width: 80%;
+        }
+
+        .user-message {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .goblin-message {
+            background: rgba(78, 205, 196, 0.2);
+            border: 1px solid rgba(78, 205, 196, 0.3);
+        }
+
+        /* 로딩 애니메이션 */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(78, 205, 196, 0.3);
+            border-radius: 50%;
+            border-top-color: #4ecdc4;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 반짝이는 효과 */
+        .sparkle {
+            animation: sparkle 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes sparkle {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* 펄스 효과 */
+        .pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- 🧙‍♂️ 왼쪽 도깨비 관리 패널 -->
+        <div class="goblin-panel">
+            <h1 class="panel-title">🌌 도깨비 메타버스 3D</h1>
+            
+            <!-- 📊 시스템 상태 -->
+            <div class="status-panel">
+                <div class="status-item">
+                    <span>💫 활성 도깨비:</span>
+                    <span class="status-value" id="activeGoblins">0/16</span>
+                </div>
+                <div class="status-item">
+                    <span>💬 대화 수:</span>
+                    <span class="status-value" id="conversationCount">0</span>
+                </div>
+                <div class="status-item">
+                    <span>🌟 시스템 상태:</span>
+                    <span class="status-value" id="systemStatus">초기화 중...</span>
+                </div>
+            </div>
+            
+            <!-- 🎮 컨트롤 버튼들 -->
+            <div class="control-buttons">
+                <button class="control-btn" onclick="spawnAllGoblins()">🚀 도깨비 소환</button>
+                <button class="control-btn" onclick="resetWorld()">🔄 월드 리셋</button>
+                <button class="control-btn" onclick="toggleWeather()">🌦️ 날씨 변경</button>
+                <button class="control-btn" onclick="toggleDay()">🌅 시간 변경</button>
+            </div>
+            
+            <!-- 🌌 지역별 이동 버튼들 (GitHub Pages용) -->
+            <div class="region-buttons" style="margin-top: 20px;">
+                <h3 style="color: #4ecdc4; margin-bottom: 15px; font-size: 18px; text-align: center; font-weight: bold;">🌍 지역 탐험</h3>
+                <button class="region-btn" onclick="visitRegion('forest')" 
+                        style="background: linear-gradient(135deg, #2e7d32, #4caf50); border: 2px solid #66bb6a;">
+                    🌲 마법의 숲
+                </button>
+                <button class="region-btn" onclick="visitRegion('tech')" 
+                        style="background: linear-gradient(135deg, #0d47a1, #1976d2); border: 2px solid #42a5f5;">
+                    🔬 기술 단지
+                </button>
+                <button class="region-btn" onclick="visitRegion('creative')" 
+                        style="background: linear-gradient(135deg, #6a1b9a, #e91e63); border: 2px solid #f06292;">
+                    🎨 창작구역
+                </button>
+                <button class="region-btn" onclick="visitRegion('library')" 
+                        style="background: linear-gradient(135deg, #1565c0, #1976d2); border: 2px solid #64b5f6;">
+                    📚 지혜의 도서관
+                </button>
+                <button class="region-btn" onclick="visitRegion('business')" 
+                        style="background: linear-gradient(135deg, #1a237e, #3f51b5); border: 2px solid #7986cb;">
+                    🏢 비즈니스 구역
+                </button>
+                <button class="region-btn" onclick="visitRegion('future')" 
+                        style="background: linear-gradient(135deg, #4a148c, #7b1fa2); border: 2px solid #ba68c8;">
+                    🏙️ 미래 도시
+                </button>
+                <button class="region-btn" onclick="visitRegion('islands')" 
+                        style="background: linear-gradient(135deg, #006064, #0097a7); border: 2px solid #4dd0e1;">
+                    🏝️ 떠다니는 섬들
+                </button>
+            </div>
+            
+            <!-- 🧙‍♂️ 도깨비 카드들 -->
+            <div class="goblin-section" style="margin-top: 25px;">
+                <h3 style="color: #4ecdc4; margin-bottom: 15px; font-size: 18px; text-align: center; font-weight: bold; background: linear-gradient(135deg, #4ecdc4, #44a08d, #96ceb4); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 0 20px rgba(78, 205, 196, 0.3);">👥 도깨비 전문가들</h3>
+                <div class="goblin-grid" id="goblinGrid">
+                    <!-- JavaScript로 동적 생성 -->
+                </div>
+            </div>
+            
+            <!-- 🔧 리사이즈 핸들 -->
+            <div class="resize-handle" id="resizeHandle"></div>
+        </div>
+        
+        <!-- 3D 메타버스 캔버스 -->
+        <canvas id="metaverse-canvas"></canvas>
+        
+        <!-- 우상단 시스템 정보 -->
+        <div class="system-info">
+            <h3>🎮 시스템 정보</h3>
+            <div class="info-item">
+                <span>FPS:</span>
+                <span id="fps">60</span>
+            </div>
+            <div class="info-item">
+                <span>메모리:</span>
+                <span id="memory">Normal</span>
+            </div>
+            <div class="info-item">
+                <span>연결:</span>
+                <span id="connection">Online</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 💬 채팅 오버레이 -->
+    <div class="chat-overlay" id="chatOverlay">
+        <div class="chat-window">
+            <div class="chat-header">
+                <div class="chat-title" id="chatTitle">🧙‍♂️ 도깨비와의 대화</div>
+                <button class="close-button" onclick="closeChat()">×</button>
+            </div>
+            <div class="chat-content" id="chatContent">
+                <!-- 대화 내용이 여기에 표시됩니다 -->
+            </div>
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" id="chatInput" 
+                       placeholder="도깨비에게 메시지를 보내세요..." 
+                       onkeypress="handleKeyPress(event)">
+                <button class="send-button" onclick="sendMessage()">
+                    💬 전송
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // ES6 모듈로 Three.js 및 컨트롤 임포트
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // Three.js 클래스들을 전역으로 할당 (기존 코드 호환성)
+        window.THREE = THREE;
+        window.OrbitControls = OrbitControls;
+        
+        console.log('✅ Three.js ES6 모듈 로딩 완료');
+
+        // 🌌 글로벌 변수 및 시스템
+        let scene, camera, renderer, controls;
+        let goblins3D = [];
+        let goblinHouses = [];
+        let currentGoblin = null;
+        let conversationCount = 0;
+        let isSystemReady = false;
+        
+        // 🧙‍♂️ 도깨비 데이터베이스
+        const goblinDatabase = [
+            {
+                name: '의료진',
+                role: '건강 관리 및 의료 상담 전문가',
+                emoji: '👩‍⚕️',
+                color: 0x4ecdc4,
+                personality: 'caring',
+                position: { x: -15, z: -15 },
+                specialties: ['의료진', '건강관리', '질병예방', '응급처치']
+            },
+            {
+                name: '빌더',
+                role: '시스템 구축과 개발을 담당하는 기술 전문가',
+                emoji: '👷',
+                color: 0x96ceb4,
+                personality: 'technical',
+                position: { x: 15, z: -15 },
+                specialties: ['개발', '시스템구축', '기술', 'AI']
+            },
+            {
+                name: '상담사',
+                role: '심리적 지원과 문제 해결을 돕는 상담 전문가',
+                emoji: '👨‍💼',
+                color: 0xff6b6b,
+                personality: 'supportive',
+                position: { x: -15, z: 15 },
+                specialties: ['상담', '심리치료', '문제해결', '코칭']
+            },
+            {
+                name: '창작가',
+                role: '예술과 창작 분야의 전문가',
+                emoji: '🎨',
+                color: 0xfeca57,
+                personality: 'creative',
+                position: { x: 15, z: 15 },
+                specialties: ['창작', '예술', '디자인', '아이디어']
+            },
+            {
+                name: '데이터분석가',
+                role: '데이터 수집과 분석을 통한 인사이트 제공',
+                emoji: '📊',
+                color: 0x48dbfb,
+                personality: 'analytical',
+                position: { x: 0, z: -20 },
+                specialties: ['데이터분석', '통계', '인사이트', '리포트']
+            },
+            {
+                name: 'SEO전문가',
+                role: '검색 엔진 최적화 및 웹 마케팅 전문가',
+                emoji: '🔍',
+                color: 0x0abde3,
+                personality: 'strategic',
+                position: { x: -20, z: 0 },
+                specialties: ['SEO', '마케팅', '검색최적화', '웹전략']
+            },
+            {
+                name: '마케팅전문가',
+                role: '브랜딩과 마케팅 전략 수립 전문가',
+                emoji: '📈',
+                color: 0xee5a24,
+                personality: 'persuasive',
+                position: { x: 20, z: 0 },
+                specialties: ['마케팅', '브랜딩', '광고', '전략기획']
+            },
+            {
+                name: '글쓰기전문가',
+                role: '콘텐츠 작성과 편집의 전문가',
+                emoji: '✍️',
+                color: 0x5f27cd,
+                personality: 'literary',
+                position: { x: 0, z: 20 },
+                specialties: ['글쓰기', '편집', '콘텐츠', '스토리텔링']
+            },
+            {
+                name: '컨설턴트',
+                role: '비즈니스 전략과 솔루션 제공 전문가',
+                emoji: '💼',
+                color: 0x00d2d3,
+                personality: 'strategic',
+                position: { x: -10, z: -10 },
+                specialties: ['컨설팅', '전략', '비즈니스', '솔루션']
+            },
+            {
+                name: '인사전문가',
+                role: '인적 자원 관리와 조직 개발 전문가',
+                emoji: '👥',
+                color: 0xff9ff3,
+                personality: 'empathetic',
+                position: { x: 10, z: -10 },
+                specialties: ['인사', '조직관리', '채용', '교육']
+            },
+            {
+                name: '비서',
+                role: '업무 지원과 일정 관리 전문가',
+                emoji: '📋',
+                color: 0x54a0ff,
+                personality: 'organized',
+                position: { x: -10, z: 10 },
+                specialties: ['비서', '일정관리', '업무지원', '조직']
+            },
+            {
+                name: '창업가',
+                role: '새로운 사업 아이디어와 창업 지원 전문가',
+                emoji: '🚀',
+                color: 0x5f27cd,
+                personality: 'innovative',
+                position: { x: 10, z: 10 },
+                specialties: ['창업', '사업계획', '투자', '혁신']
+            },
+            {
+                name: '쇼핑도우미',
+                role: '상품 추천과 구매 결정 지원 전문가',
+                emoji: '🛍️',
+                color: 0xff6b6b,
+                personality: 'helpful',
+                position: { x: 0, z: -10 },
+                specialties: ['쇼핑', '상품추천', '가격비교', '구매가이드']
+            },
+            {
+                name: '성장멘토',
+                role: '개인 성장과 자기계발 지원 전문가',
+                emoji: '🌱',
+                color: 0x26de81,
+                personality: 'motivational',
+                position: { x: -5, z: 5 },
+                specialties: ['성장', '자기계발', '목표설정', '동기부여']
+            },
+            {
+                name: '운세도사',
+                role: '운세와 미래 예측을 통한 조언 전문가',
+                emoji: '🔮',
+                color: 0xa55eea,
+                personality: 'mystical',
+                position: { x: 5, z: -5 },
+                specialties: ['운세', '예측', '조언', '미래']
+            },
+            {
+                name: '촌장',
+                role: '도깨비 마을의 지혜로운 리더',
+                emoji: '👴',
+                color: 0xffd32a,
+                personality: 'wise',
+                position: { x: 0, z: 0 },
+                specialties: ['리더십', '지혜', '마을관리', '조언']
+            }
+        ];
+
+        // 🎮 상태 업데이트 함수
+        function updateStatus(message) {
+            console.log('🌟 상태:', message);
+            // 간단한 상태 표시
+            if (document.getElementById('systemStatus')) {
+                document.getElementById('systemStatus').textContent = message.slice(0, 20) + '...';
+            }
+        }
+
+        // 🧙‍♂️ 도깨비 카드 생성
+        function createGoblinCards() {
+            const gridContainer = document.getElementById('goblinGrid');
+            if (!gridContainer) return;
+
+            gridContainer.innerHTML = '';
+            
+            goblinDatabase.forEach((goblin, index) => {
+                const card = document.createElement('div');
+                card.className = 'goblin-card';
+                card.innerHTML = `
+                    <div class="goblin-avatar">${goblin.emoji}</div>
+                    <div class="goblin-name">${goblin.name}</div>
+                    <div class="goblin-role">${goblin.role.slice(0, 30)}...</div>
+                    <div class="goblin-status">활성</div>
+                `;
+                card.onclick = () => focusOnGoblin(index);
+                gridContainer.appendChild(card);
+            });
+
+            // 활성 도깨비 수 업데이트
+            if (document.getElementById('activeGoblins')) {
+                document.getElementById('activeGoblins').textContent = `${goblinDatabase.length}/16`;
+            }
+        }
+
+        // 🎯 도깨비 선택 및 채팅 열기
+        function focusOnGoblin(index) {
+            const goblin = goblinDatabase[index];
+            if (!goblin) return;
+
+            currentGoblin = goblin;
+            updateStatus(`${goblin.name}과 대화를 시작합니다...`);
+            
+            // 채팅 창 열기
+            openChat(goblin);
+        }
+
+        // 💬 채팅 창 열기
+        function openChat(goblin) {
+            const overlay = document.getElementById('chatOverlay');
+            const title = document.getElementById('chatTitle');
+            const content = document.getElementById('chatContent');
+            
+            title.textContent = `${goblin.emoji} ${goblin.name}과의 대화`;
+            content.innerHTML = `
+                <div class="message goblin-message">
+                    <strong>${goblin.name}:</strong> 안녕하세요! ${goblin.role} 무엇을 도와드릴까요?
+                </div>
+            `;
+            
+            overlay.style.display = 'flex';
+            document.getElementById('chatInput').focus();
+        }
+
+        // ❌ 채팅 창 닫기
+        function closeChat() {
+            document.getElementById('chatOverlay').style.display = 'none';
+            currentGoblin = null;
+        }
+
+        // 📝 메시지 전송
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const content = document.getElementById('chatContent');
+            const message = input.value.trim();
+            
+            if (!message || !currentGoblin) return;
+
+            // 사용자 메시지 추가
+            content.innerHTML += `
+                <div class="message user-message">
+                    <strong>나:</strong> ${message}
+                </div>
+            `;
+
+            // 도깨비 응답 생성
+            const response = generateGoblinResponse(currentGoblin, message);
+            
+            setTimeout(() => {
+                content.innerHTML += `
+                    <div class="message goblin-message">
+                        <strong>${currentGoblin.name}:</strong> ${response}
+                    </div>
+                `;
+                content.scrollTop = content.scrollHeight;
+                
+                conversationCount++;
+                if (document.getElementById('conversationCount')) {
+                    document.getElementById('conversationCount').textContent = conversationCount;
+                }
+            }, 1000);
+
+            input.value = '';
+            content.scrollTop = content.scrollHeight;
+        }
+
+        // 🎹 키보드 입력 처리
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // 🤖 도깨비 응답 생성
+        function generateGoblinResponse(goblin, userMessage) {
+            const message = userMessage.toLowerCase();
+            
+            // 기본 응답 템플릿
+            const responses = {
+                '의료진': [
+                    "건강 관련 질문이시군요! 전문적인 조언을 드릴게요.",
+                    "의료 정보를 정확히 안내해드리겠습니다.",
+                    "건강은 가장 소중한 자산이에요. 어떤 부분이 궁금하신가요?"
+                ],
+                '빌더': [
+                    "기술적인 문제를 해결해드릴게요!",
+                    "시스템 구축 관련해서 도움을 드리겠습니다.",
+                    "개발과 관련된 궁금증을 풀어드릴게요!"
+                ],
+                '상담사': [
+                    "마음의 이야기를 들려주세요. 함께 해결해봐요.",
+                    "어려운 상황이시군요. 차근차근 풀어나가봅시다.",
+                    "당신의 고민을 이해합니다. 도움을 드릴게요."
+                ]
+            };
+
+            const goblinResponses = responses[goblin.name] || [
+                `${goblin.name}으로서 최선을 다해 도움을 드리겠습니다!`,
+                `${goblin.role} 전문 지식으로 답변해드릴게요.`,
+                `궁금한 점을 자세히 알려주시면 더 도움이 될 것 같아요!`
+            ];
+
+            return goblinResponses[Math.floor(Math.random() * goblinResponses.length)];
+        }
+
+        // �️ 도깨비 마을 생성 함수
+        function createGoblinVillage() {
+            console.log('🏘️ 도깨비 마을을 건설하는 중...');
+            
+            // 🏠 도깨비 집들 생성
+            goblinDatabase.forEach((goblin, index) => {
+                createGoblinHouse(goblin, index);
+                create3DGoblin(goblin, index);
+            });
+            
+            // 🌳 나무들 생성
+            createTrees();
+            
+            // 🏛️ 중앙 광장 생성
+            createCentralPlaza();
+            
+            // ✨ 마법 효과들
+            createMagicEffects();
+            
+            updateStatus('🏘️ 도깨비 마을 건설 완료!');
+        }
+
+        // 🏠 개별 도깨비 집 생성
+        function createGoblinHouse(goblin, index) {
+            // 집 그룹 생성
+            const houseGroup = new THREE.Group();
+            
+            // 집 본체 (육면체)
+            const houseGeometry = new THREE.BoxGeometry(3, 3, 3);
+            const houseMaterial = new THREE.MeshLambertMaterial({ 
+                color: goblin.color,
+                transparent: true,
+                opacity: 0.8
+            });
+            const house = new THREE.Mesh(houseGeometry, houseMaterial);
+            house.position.y = 1.5;
+            house.castShadow = true;
+            house.receiveShadow = true;
+            
+            // 지붕 (피라미드)
+            const roofGeometry = new THREE.ConeGeometry(2.2, 2, 4);
+            const roofMaterial = new THREE.MeshLambertMaterial({ color: 0x8b4513 });
+            const roof = new THREE.Mesh(roofGeometry, roofMaterial);
+            roof.position.y = 4;
+            roof.rotation.y = Math.PI / 4;
+            roof.castShadow = true;
+            
+            // 문 (작은 육면체)
+            const doorGeometry = new THREE.BoxGeometry(0.8, 1.5, 0.1);
+            const doorMaterial = new THREE.MeshLambertMaterial({ color: 0x654321 });
+            const door = new THREE.Mesh(doorGeometry, doorMaterial);
+            door.position.set(0, 0.75, 1.55);
+            
+            // 창문들
+            const windowGeometry = new THREE.BoxGeometry(0.6, 0.6, 0.1);
+            const windowMaterial = new THREE.MeshLambertMaterial({ color: 0x87ceeb });
+            
+            const window1 = new THREE.Mesh(windowGeometry, windowMaterial);
+            window1.position.set(-1, 2, 1.55);
+            
+            const window2 = new THREE.Mesh(windowGeometry, windowMaterial);
+            window2.position.set(1, 2, 1.55);
+            
+            // 집 그룹에 추가
+            houseGroup.add(house);
+            houseGroup.add(roof);
+            houseGroup.add(door);
+            houseGroup.add(window1);
+            houseGroup.add(window2);
+            
+            // 위치 설정 (원형 배치)
+            const angle = (index / goblinDatabase.length) * Math.PI * 2;
+            const radius = 15;
+            const x = Math.cos(angle) * radius;
+            const z = Math.sin(angle) * radius;
+            
+            houseGroup.position.set(x, 0, z);
+            houseGroup.rotation.y = angle + Math.PI; // 중앙을 향하도록
+            
+            scene.add(houseGroup);
+            goblinHouses.push(houseGroup);
+        }
+
+        // 🧙‍♂️ 3D 도깨비 생성
+        function create3DGoblin(goblin, index) {
+            const goblinGroup = new THREE.Group();
+            
+            // 몸체 (구체)
+            const bodyGeometry = new THREE.SphereGeometry(0.5, 8, 6);
+            const bodyMaterial = new THREE.MeshLambertMaterial({ color: goblin.color });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 0.5;
+            body.castShadow = true;
+            
+            // 머리 (작은 구체)
+            const headGeometry = new THREE.SphereGeometry(0.3, 8, 6);
+            const headMaterial = new THREE.MeshLambertMaterial({ color: 0xffdbac });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 1.3;
+            head.castShadow = true;
+            
+            // 모자 (원뿔)
+            const hatGeometry = new THREE.ConeGeometry(0.4, 0.8, 6);
+            const hatMaterial = new THREE.MeshLambertMaterial({ color: 0x4b0082 });
+            const hat = new THREE.Mesh(hatGeometry, hatMaterial);
+            hat.position.y = 2;
+            hat.castShadow = true;
+            
+            // 이름표 스프라이트
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = 256;
+            canvas.height = 64;
+            
+            context.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            context.fillRect(0, 0, 256, 64);
+            context.fillStyle = 'white';
+            context.font = '24px Arial';
+            context.textAlign = 'center';
+            context.fillText(goblin.name, 128, 40);
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
+            const sprite = new THREE.Sprite(spriteMaterial);
+            sprite.position.y = 3;
+            sprite.scale.set(2, 0.5, 1);
+            
+            goblinGroup.add(body);
+            goblinGroup.add(head);
+            goblinGroup.add(hat);
+            goblinGroup.add(sprite);
+            
+            // 위치 설정 (집 앞)
+            const angle = (index / goblinDatabase.length) * Math.PI * 2;
+            const radius = 12;
+            const x = Math.cos(angle) * radius;
+            const z = Math.sin(angle) * radius;
+            
+            goblinGroup.position.set(x, 0, z);
+            
+            // 클릭 이벤트를 위한 userData 설정
+            goblinGroup.userData = { goblinIndex: index, type: 'goblin' };
+            
+            // 애니메이션 (위아래로 떠다니기)
+            gsap.to(goblinGroup.position, {
+                y: Math.random() * 0.5 + 0.2,
+                duration: 2 + Math.random(),
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            scene.add(goblinGroup);
+            goblins3D.push(goblinGroup);
+        }
+
+        // 🌳 나무들 생성
+        function createTrees() {
+            for (let i = 0; i < 20; i++) {
+                const treeGroup = new THREE.Group();
+                
+                // 나무 줄기
+                const trunkGeometry = new THREE.CylinderGeometry(0.2, 0.3, 4);
+                const trunkMaterial = new THREE.MeshLambertMaterial({ color: 0x8b4513 });
+                const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+                trunk.position.y = 2;
+                trunk.castShadow = true;
+                
+                // 나무 잎
+                const leavesGeometry = new THREE.SphereGeometry(2, 8, 6);
+                const leavesMaterial = new THREE.MeshLambertMaterial({ color: 0x228b22 });
+                const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
+                leaves.position.y = 5;
+                leaves.castShadow = true;
+                
+                treeGroup.add(trunk);
+                treeGroup.add(leaves);
+                
+                // 랜덤 위치 (마을 외곽)
+                const angle = Math.random() * Math.PI * 2;
+                const radius = 25 + Math.random() * 15;
+                const x = Math.cos(angle) * radius;
+                const z = Math.sin(angle) * radius;
+                
+                treeGroup.position.set(x, 0, z);
+                scene.add(treeGroup);
+            }
+        }
+
+        // 🏛️ 중앙 광장 생성
+        function createCentralPlaza() {
+            // 분수대
+            const fountainGroup = new THREE.Group();
+            
+            const baseGeometry = new THREE.CylinderGeometry(3, 3, 0.5);
+            const baseMaterial = new THREE.MeshLambertMaterial({ color: 0x708090 });
+            const base = new THREE.Mesh(baseGeometry, baseMaterial);
+            base.position.y = 0.25;
+            base.receiveShadow = true;
+            
+            const pillarGeometry = new THREE.CylinderGeometry(0.3, 0.3, 3);
+            const pillarMaterial = new THREE.MeshLambertMaterial({ color: 0x2f4f4f });
+            const pillar = new THREE.Mesh(pillarGeometry, pillarMaterial);
+            pillar.position.y = 2;
+            pillar.castShadow = true;
+            
+            const topGeometry = new THREE.SphereGeometry(0.5, 8, 6);
+            const topMaterial = new THREE.MeshLambertMaterial({ color: 0x4169e1 });
+            const top = new THREE.Mesh(topGeometry, topMaterial);
+            top.position.y = 3.5;
+            top.castShadow = true;
+            
+            fountainGroup.add(base);
+            fountainGroup.add(pillar);
+            fountainGroup.add(top);
+            
+            scene.add(fountainGroup);
+        }
+
+        // ✨ 마법 효과들
+        function createMagicEffects() {
+            // 떠다니는 마법 입자들
+            const particleCount = 100;
+            const particles = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            
+            for (let i = 0; i < particleCount * 3; i += 3) {
+                positions[i] = (Math.random() - 0.5) * 50;     // x
+                positions[i + 1] = Math.random() * 20 + 2;     // y
+                positions[i + 2] = (Math.random() - 0.5) * 50; // z
+            }
+            
+            particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            
+            const particleMaterial = new THREE.PointsMaterial({
+                color: 0x4ecdc4,
+                size: 0.3,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            const particleSystem = new THREE.Points(particles, particleMaterial);
+            scene.add(particleSystem);
+            
+            // 파티클 애니메이션
+            gsap.to(particleSystem.rotation, {
+                y: Math.PI * 2,
+                duration: 20,
+                repeat: -1,
+                ease: "none"
+            });
+        }
+
+        // �🌌 GitHub Pages용 지역별 이동 함수
+        window.visitRegion = function(regionId) {
+            // GitHub Pages용 베이스 URL 계산
+            const baseURL = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/');
+            
+            // 🌲 마법의 숲은 별도 HTML 파일로 이동
+            if (regionId === 'forest') {
+                updateStatus('🌲 마법의 숲으로 포탈을 여는 중...');
+                setTimeout(() => {
+                    window.location.href = baseURL + 'magic-forest.html';
+                }, 1000);
+                return;
+            }
+            
+            // 🏢 비즈니스 구역은 별도 HTML 파일로 이동
+            if (regionId === 'business') {
+                updateStatus('🏢 비즈니스 구역으로 포탈을 여는 중...');
+                setTimeout(() => {
+                    window.location.href = baseURL + 'business.html';
+                }, 1000);
+                return;
+            }
+            
+            // 🔬 기술 단지는 별도 HTML 파일로 이동
+            if (regionId === 'tech') {
+                updateStatus('🔬 기술 단지로 포탈을 여는 중...');
+                setTimeout(() => {
+                    window.location.href = baseURL + 'tech-district.html';
+                }, 1000);
+                return;
+            }
+            
+            // 🎨 창작 구역은 별도 HTML 파일로 이동
+            if (regionId === 'creative') {
+                updateStatus('🎨 창작 구역으로 포탈을 여는 중...');
+                setTimeout(() => {
+                    window.location.href = baseURL + 'creative-district.html';
+                }, 1000);
+                return;
+            }
+            
+            // 📚 지혜의 도서관은 별도 HTML 파일로 이동
+            if (regionId === 'library') {
+                updateStatus('📚 지혜의 도서관으로 포탈을 여는 중...');
+                setTimeout(() => {
+                    window.location.href = baseURL + 'wisdom-library.html';
+                }, 1000);
+                return;
+            }
+            
+            // 🏙️ 미래 도시는 별도 HTML 파일로 이동
+            if (regionId === 'future') {
+                updateStatus('🏙️ 미래 도시로 포탈을 여는 중...');
+                setTimeout(() => {
+                    window.location.href = baseURL + 'furure-city.html';
+                }, 1000);
+                return;
+            }
+            
+            // 🏝️ 떠다니는 섬들은 별도 HTML 파일로 이동
+            if (regionId === 'islands') {
+                updateStatus('🏝️ 떠다니는 섬들로 포탈을 여는 중...');
+                setTimeout(() => {
+                    window.location.href = baseURL + 'floating-islands.html';
+                }, 1000);
+                return;
+            }
+        };
+        
+        // 🎮 기타 컨트롤 함수들
+        window.spawnAllGoblins = function() {
+            updateStatus('🚀 모든 도깨비들을 소환합니다!');
+            createGoblinCards();
+        };
+        
+        window.resetWorld = function() {
+            updateStatus('🔄 월드를 리셋합니다...');
+            setTimeout(() => {
+                createGoblinCards();
+                updateStatus('✨ 월드가 새롭게 태어났습니다!');
+            }, 1000);
+        };
+        
+        window.toggleWeather = function() {
+            const weatherTypes = ['☀️ 맑음', '🌧️ 비', '❄️ 눈', '⛅ 흐림'];
+            const currentWeather = weatherTypes[Math.floor(Math.random() * weatherTypes.length)];
+            updateStatus(`🌦️ 날씨가 ${currentWeather}로 변경되었습니다!`);
+        };
+        
+        window.toggleDay = function() {
+            const timeTypes = ['🌅 새벽', '☀️ 낮', '🌅 석양', '🌙 밤'];
+            const currentTime = timeTypes[Math.floor(Math.random() * timeTypes.length)];
+            updateStatus(`🌅 시간이 ${currentTime}로 변경되었습니다!`);
+        };
+
+        // 전역 함수 등록
+        window.openChat = openChat;
+        window.closeChat = closeChat;
+        window.sendMessage = sendMessage;
+        window.handleKeyPress = handleKeyPress;
+        window.focusOnGoblin = focusOnGoblin;
+
+        // �️ 마우스 이벤트 설정
+        function setupMouseEvents() {
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+            
+            function onMouseClick(event) {
+                // 마우스 좌표를 정규화된 디바이스 좌표로 변환
+                const canvas = renderer.domElement;
+                const rect = canvas.getBoundingClientRect();
+                
+                mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+                
+                // 레이캐스터 업데이트
+                raycaster.setFromCamera(mouse, camera);
+                
+                // 3D 도깨비들과의 교차점 체크
+                const intersects = raycaster.intersectObjects(goblins3D, true);
+                
+                if (intersects.length > 0) {
+                    // 첫 번째 교차점의 부모 객체 찾기
+                    let clickedObject = intersects[0].object;
+                    while (clickedObject.parent && !clickedObject.userData.goblinIndex && clickedObject.userData.goblinIndex !== 0) {
+                        clickedObject = clickedObject.parent;
+                    }
+                    
+                    if (clickedObject.userData && (clickedObject.userData.goblinIndex || clickedObject.userData.goblinIndex === 0)) {
+                        const goblinIndex = clickedObject.userData.goblinIndex;
+                        console.log(`🧙‍♂️ ${goblinDatabase[goblinIndex].name} 클릭됨!`);
+                        
+                        // 도깨비 선택 효과
+                        addClickEffect(clickedObject);
+                        
+                        // 채팅 창 열기
+                        focusOnGoblin(goblinIndex);
+                    }
+                }
+            }
+            
+            // 클릭 이벤트 리스너 추가
+            renderer.domElement.addEventListener('click', onMouseClick);
+        }
+
+        // ✨ 클릭 효과 추가
+        function addClickEffect(goblinObject) {
+            // 링 이펙트 생성
+            const ringGeometry = new THREE.RingGeometry(1, 1.5, 16);
+            const ringMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x4ecdc4, 
+                transparent: true, 
+                opacity: 0.8,
+                side: THREE.DoubleSide
+            });
+            const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+            
+            ring.position.copy(goblinObject.position);
+            ring.rotation.x = -Math.PI / 2;
+            ring.position.y = 0.1;
+            
+            scene.add(ring);
+            
+            // 링 애니메이션
+            gsap.to(ring.scale, {
+                x: 2,
+                y: 2,
+                z: 2,
+                duration: 0.5,
+                ease: "power2.out"
+            });
+            
+            gsap.to(ring.material, {
+                opacity: 0,
+                duration: 0.5,
+                ease: "power2.out",
+                onComplete: () => {
+                    scene.remove(ring);
+                    ring.geometry.dispose();
+                    ring.material.dispose();
+                }
+            });
+            
+            // 도깨비 점프 애니메이션
+            const originalY = goblinObject.position.y;
+            gsap.to(goblinObject.position, {
+                y: originalY + 1,
+                duration: 0.3,
+                ease: "power2.out",
+                yoyo: true,
+                repeat: 1
+            });
+        }
+
+        // �🚀 초기화
+        function initializeMetaverse() {
+            console.log('🌌 도깨비 메타버스 초기화 시작...');
+            
+            // 기본 Three.js 장면 설정
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x000428);
+            
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 10, 20);
+            
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: document.getElementById('metaverse-canvas'),
+                antialias: true 
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            
+            // 조명 설정
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 10, 5);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+            
+            // 바닥 생성
+            const groundGeometry = new THREE.PlaneGeometry(100, 100);
+            const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x1a472a });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+            
+            // 🏘️ 도깨비 마을 생성
+            createGoblinVillage();
+            
+            // 도깨비 카드 생성
+            createGoblinCards();
+            
+            // 🖱️ 마우스 클릭 이벤트 설정
+            setupMouseEvents();
+            
+            // 🔧 사이드바 리사이즈 기능 설정
+            setupResizablePanel();
+            
+            // 애니메이션 루프
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+                renderer.render(scene, camera);
+            }
+            animate();
+            
+            // 윈도우 리사이즈 처리
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+            
+            isSystemReady = true;
+            updateStatus('🎉 메타버스 준비 완료!');
+            
+            console.log('✅ 도깨비 메타버스 초기화 완료!');
+        }
+
+        // 🔧 사이드바 리사이즈 기능
+        function setupResizablePanel() {
+            const panel = document.querySelector('.goblin-panel');
+            const resizeHandle = document.getElementById('resizeHandle');
+            
+            if (!panel || !resizeHandle) return;
+            
+            let isResizing = false;
+            let startX = 0;
+            let startWidth = 0;
+            
+            resizeHandle.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                startX = e.clientX;
+                startWidth = parseInt(document.defaultView.getComputedStyle(panel).width, 10);
+                
+                document.body.style.cursor = 'ew-resize';
+                document.body.style.userSelect = 'none';
+                
+                e.preventDefault();
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+                
+                const width = startWidth + e.clientX - startX;
+                const minWidth = 300;
+                const maxWidth = 600;
+                
+                if (width >= minWidth && width <= maxWidth) {
+                    panel.style.width = width + 'px';
+                    
+                    // 3D 캔버스 크기 업데이트
+                    if (renderer && camera) {
+                        const canvas = renderer.domElement;
+                        const rect = canvas.getBoundingClientRect();
+                        renderer.setSize(rect.width, rect.height);
+                        camera.aspect = rect.width / rect.height;
+                        camera.updateProjectionMatrix();
+                    }
+                }
+            });
+            
+            document.addEventListener('mouseup', () => {
+                if (isResizing) {
+                    isResizing = false;
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                    
+                    // 상태 업데이트
+                    const currentWidth = parseInt(document.defaultView.getComputedStyle(panel).width, 10);
+                    updateStatus(`📏 사이드바 너비: ${currentWidth}px`);
+                }
+            });
+            
+            // 더블클릭으로 기본 크기로 복원
+            resizeHandle.addEventListener('dblclick', () => {
+                panel.style.width = '450px';
+                updateStatus('📏 사이드바 크기가 기본값으로 복원되었습니다');
+                
+                // 3D 캔버스 크기 업데이트
+                setTimeout(() => {
+                    if (renderer && camera) {
+                        const canvas = renderer.domElement;
+                        const rect = canvas.getBoundingClientRect();
+                        renderer.setSize(rect.width, rect.height);
+                        camera.aspect = rect.width / rect.height;
+                        camera.updateProjectionMatrix();
+                    }
+                }, 100);
+            });
+        }
+
+        // DOM 로드 완료 후 실행
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeMetaverse);
+        } else {
+            setTimeout(initializeMetaverse, 100);
+        }
+        
+        console.log('🎉 도깨비 메타버스 시스템 로딩 완료!');
+    </script>
+</body>
+</html>

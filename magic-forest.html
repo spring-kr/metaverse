@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, init        .goblin-specialty {
+            font-size: 14px;
+            color: #81ecec;
+            margin-bottom: 5px;
+        }
+        
+        /* AI 채팅 시스템 */
+        .chat-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 400px;
+            height: 300px;
+            background: rgba(46, 90, 53, 0.95);
+            border: 2px solid #4ecdc4;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            z-index: 1002;
+            display: none;
+            flex-direction: column;
+        }
+        
+        .chat-header {
+            background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 13px 13px 0 0;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chat-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 25px;
+            height: 25px;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            max-height: 200px;
+        }
+        
+        .chat-message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 10px;
+            max-width: 80%;
+        }
+        
+        .user-message {
+            background: #00b894;
+            color: white;
+            margin-left: auto;
+        }
+        
+        .ai-message {
+            background: rgba(78, 205, 196, 0.3);
+            color: #4ecdc4;
+            border: 1px solid #4ecdc4;
+        }
+        
+        .chat-input-container {
+            padding: 15px;
+            border-top: 1px solid #4ecdc4;
+        }
+        
+        .chat-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #4ecdc4;
+            border-radius: 8px;
+            background: rgba(78, 205, 196, 0.1);
+            color: white;
+            font-size: 14px;
+        }
+        
+        .chat-input::placeholder {
+            color: #81ecec;
+        }
+        
+        .chat-input:focus {
+            outline: none;
+            border-color: #00cec9;
+            box-shadow: 0 0 10px rgba(78, 205, 196, 0.3);
+        }cale=1.0">
+    <title>🌲 마법의 숲 - 도깨비 메타버스</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3c28 0%, #2d5a35 100%);
+            color: white;
+            overflow: hidden;
+        }
+        
+        #forest-canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            cursor: crosshair;
+        }
+        
+        /* 메인 UI 컨테이너 */
+        .ui-container {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        
+        .ui-container > * {
+            pointer-events: auto;
+        }
+        
+        /* 상태 표시 */
+        .status-display {
+            background: rgba(46, 90, 53, 0.9);
+            border: 2px solid #4ecdc4;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        /* 컨트롤 패널 */
+        .control-panel {
+            background: rgba(46, 90, 53, 0.95);
+            border: 2px solid #4ecdc4;
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+            min-width: 300px;
+        }
+        
+        .control-btn {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            padding: 12px 16px;
+            margin: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(78, 205, 196, 0.4);
+        }
+        
+        /* 뒤로가기 버튼 */
+        .back-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1001;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            padding: 15px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+        
+        /* 숲 도깨비 카드 */
+        .forest-goblin-card {
+            background: rgba(34, 60, 40, 0.9);
+            border: 2px solid #4ecdc4;
+            border-radius: 15px;
+            padding: 15px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .forest-goblin-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(78, 205, 196, 0.3);
+            border-color: #7fdfdb;
+        }
+        
+        .goblin-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4ecdc4;
+            margin-bottom: 8px;
+        }
+        
+        .goblin-specialty {
+            font-size: 14px;
+            color: #a8e6cf;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 뒤로가기 버튼 -->
+    <button class="back-btn" onclick="goBackToVillage()">← 🏘️ 도깨비 마을로</button>
+    
+    <!-- 메인 캔버스 -->
+    <canvas id="forest-canvas"></canvas>
+    
+    <!-- UI 컨테이너 -->
+    <div class="ui-container">
+        <!-- 상태 표시 -->
+        <div class="status-display" id="statusDisplay">
+            🌲 마법의 숲에 오신 것을 환영합니다!
+        </div>
+        
+        <!-- 컨트롤 패널 -->
+        <div class="control-panel">
+            <h2 style="color: #4ecdc4; margin-bottom: 15px; text-align: center;">🌲 마법의 숲</h2>
+            
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: #4ecdc4; margin-bottom: 10px; font-size: 16px;">🎮 컨트롤</h3>
+                <button class="control-btn" onclick="toggleAvatar()">🚶‍♀️ 아바타 소환</button>
+                <button class="control-btn" onclick="resetCamera()">📷 카메라 리셋</button>
+                <button class="control-btn" onclick="toggleWeather()">🌧️ 날씨 변경</button>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: #4ecdc4; margin-bottom: 10px; font-size: 16px;">🧚‍♀️ 숲의 도깨비들</h3>
+                <div id="forestGoblinGrid">
+                    <!-- 숲 도깨비들이 여기에 생성됩니다 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- AI 채팅 시스템 -->
+    <div class="chat-container" id="chatContainer">
+        <div class="chat-header">
+            <span id="chatTitle">🌿 숲지기와 대화</span>
+            <button class="chat-close" onclick="closeChat()">×</button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <!-- 채팅 메시지들이 여기에 표시됩니다 -->
+        </div>
+        <div class="chat-input-container">
+            <input type="text" class="chat-input" id="chatInput" placeholder="숲의 도깨비에게 메시지를 보내세요..." onkeypress="handleChatKeyPress(event)">
+        </div>
+    </div>
+    
+    <!-- Three.js 및 GSAP 라이브러리 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+    <script>
+        // 🌲 마법의 숲 전역 변수
+        let scene, camera, renderer, controls;
+        let avatar = null;
+        let isSystemReady = false;
+        
+        // 🧚‍♀️ 숲의 특별한 도깨비들
+        const forestGoblins = [
+            { name: '🌿 숲지기', specialty: '자연 마법', description: '숲의 모든 생명을 돌보는 지혜로운 도깨비', emoji: '🌿', color: 0x228B22 },
+            { name: '🦋 나비술사', specialty: '변화 마법', description: '아름다운 변화와 성장을 이끄는 도깨비', emoji: '🦋', color: 0xFF69B4 },
+            { name: '🌙 달빛무당', specialty: '치유 마법', description: '달빛의 힘으로 상처를 치유하는 도깨비', emoji: '🌙', color: 0x9370DB },
+            { name: '🌺 꽃말쟁이', specialty: '소통 마법', description: '식물들과 대화하며 비밀을 전하는 도깨비', emoji: '🌺', color: 0xFF1493 },
+            { name: '🦉 지혜부엉이', specialty: '예언 마법', description: '미래를 내다보는 신비로운 도깨비', emoji: '🦉', color: 0x8B4513 },
+            { name: '🍄 버섯요리사', specialty: '연금술', description: '마법 버섯으로 신비한 요리를 만드는 도깨비', emoji: '🍄', color: 0xDC143C }
+        ];
+        
+        // 🎯 상태 업데이트 함수
+        function updateStatus(message) {
+            const statusElement = document.getElementById('statusDisplay');
+            if (statusElement) {
+                statusElement.textContent = message;
+            }
+        }
+        
+        // 🔙 도깨비 마을로 돌아가기
+        function goBackToVillage() {
+            updateStatus('🏘️ 도깨비 마을로 돌아가는 중...');
+            // GitHub Pages용 베이스 URL 계산
+            const baseURL = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/');
+            setTimeout(() => {
+                window.location.href = baseURL + 'index.html';
+            }, 1000);
+        }
+        
+        // 🎮 아바타 토글
+        function toggleAvatar() {
+            if (!avatar) {
+                createAvatar();
+            } else {
+                removeAvatar();
+            }
+        }
+        
+        // 🚶‍♀️ 아바타 생성
+        function createAvatar() {
+            // 아바타 그룹 생성
+            avatar = new THREE.Group();
+            
+            // 몸통 (원통형)
+            const bodyGeometry = new THREE.CylinderGeometry(0.3, 0.4, 1.5);
+            const bodyMaterial = new THREE.MeshPhongMaterial({ color: 0x4ecdc4 });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 1;
+            avatar.add(body);
+            
+            // 머리 (구형)
+            const headGeometry = new THREE.SphereGeometry(0.4);
+            const headMaterial = new THREE.MeshPhongMaterial({ color: 0x5fdbd6 });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 2.2;
+            avatar.add(head);
+            
+            // 팔 (왼쪽)
+            const armGeometry = new THREE.CylinderGeometry(0.1, 0.12, 1);
+            const armMaterial = new THREE.MeshPhongMaterial({ color: 0x4ecdc4 });
+            const leftArm = new THREE.Mesh(armGeometry, armMaterial);
+            leftArm.position.set(-0.5, 1, 0);
+            leftArm.rotation.z = 0.2;
+            avatar.add(leftArm);
+            
+            // 팔 (오른쪽)
+            const rightArm = new THREE.Mesh(armGeometry, armMaterial);
+            rightArm.position.set(0.5, 1, 0);
+            rightArm.rotation.z = -0.2;
+            avatar.add(rightArm);
+            
+            // 다리 (왼쪽)
+            const legGeometry = new THREE.CylinderGeometry(0.12, 0.15, 1.2);
+            const legMaterial = new THREE.MeshPhongMaterial({ color: 0x44a08d });
+            const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
+            leftLeg.position.set(-0.2, 0.1, 0);
+            avatar.add(leftLeg);
+            
+            // 다리 (오른쪽)
+            const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
+            rightLeg.position.set(0.2, 0.1, 0);
+            avatar.add(rightLeg);
+            
+            // 마법의 오라 효과
+            const auraGeometry = new THREE.RingGeometry(0.8, 1.2, 16);
+            const auraMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x4ecdc4, 
+                transparent: true, 
+                opacity: 0.3,
+                side: THREE.DoubleSide
+            });
+            const aura = new THREE.Mesh(auraGeometry, auraMaterial);
+            aura.rotation.x = -Math.PI / 2;
+            aura.position.y = 0.1;
+            avatar.add(aura);
+            
+            // 오라 회전 애니메이션
+            gsap.to(aura.rotation, {
+                z: Math.PI * 2,
+                duration: 4,
+                repeat: -1,
+                ease: "none"
+            });
+            
+            // 아바타 위치 설정
+            avatar.position.set(0, 0, 0);
+            scene.add(avatar);
+            
+            // 카메라를 아바타 근처로 이동
+            if (camera && controls) {
+                gsap.to(camera.position, {
+                    x: 5, y: 5, z: 10,
+                    duration: 1.5,
+                    ease: "power2.out"
+                });
+                gsap.to(controls.target, {
+                    x: 0, y: 1, z: 0,
+                    duration: 1.5,
+                    ease: "power2.out",
+                    onUpdate: () => controls.update()
+                });
+            }
+            
+            updateStatus('🚶‍♀️ 숲 속 아바타가 소환되었습니다!');
+        }
+        
+        // 🚶‍♀️ 아바타 제거
+        function removeAvatar() {
+            if (avatar) {
+                // 아바타 그룹의 모든 자식 요소들을 제거
+                while(avatar.children.length > 0) {
+                    const child = avatar.children[0];
+                    avatar.remove(child);
+                    if (child.geometry) child.geometry.dispose();
+                    if (child.material) child.material.dispose();
+                }
+                // 씬에서 아바타 그룹 제거
+                scene.remove(avatar);
+                avatar = null;
+                updateStatus('👋 아바타가 숲 속으로 사라졌습니다');
+            }
+        }
+        
+        // 📷 카메라 리셋
+        function resetCamera() {
+            if (camera && controls) {
+                gsap.to(camera.position, {
+                    x: 0, y: 10, z: 20,
+                    duration: 1.5,
+                    ease: "power2.out"
+                });
+                gsap.to(controls.target, {
+                    x: 0, y: 0, z: 0,
+                    duration: 1.5,
+                    ease: "power2.out",
+                    onUpdate: () => controls.update()
+                });
+                updateStatus('📷 카메라가 숲의 중심으로 리셋되었습니다');
+            }
+        }
+        
+        // 🌧️ 날씨 변경
+        function toggleWeather() {
+            const weathers = ['☀️ 맑음', '🌧️ 비', '🌫️ 안개', '❄️ 눈'];
+            const randomWeather = weathers[Math.floor(Math.random() * weathers.length)];
+            updateStatus(`🌲 숲의 날씨가 ${randomWeather}로 변했습니다`);
+        }
+        
+        // 🏷️ 숲 도깨비 이름표 생성
+        function createForestGoblinNameTag(name, specialty) {
+            // 캔버스 생성
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = 512;
+            canvas.height = 256;
+            
+            // 배경 그리기
+            context.fillStyle = 'rgba(46, 90, 53, 0.9)';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 테두리 그리기
+            context.strokeStyle = '#4ecdc4';
+            context.lineWidth = 8;
+            context.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
+            
+            // 이름 텍스트
+            context.fillStyle = '#4ecdc4';
+            context.font = 'bold 48px Arial';
+            context.textAlign = 'center';
+            context.fillText(name, canvas.width / 2, 80);
+            
+            // 전문 분야 텍스트
+            context.fillStyle = '#a8e6cf';
+            context.font = '32px Arial';
+            context.fillText(specialty, canvas.width / 2, 140);
+            
+            // 장식 라인
+            context.strokeStyle = '#4ecdc4';
+            context.lineWidth = 2;
+            context.beginPath();
+            context.moveTo(50, 160);
+            context.lineTo(canvas.width - 50, 160);
+            context.stroke();
+            
+            // 작은 별 장식들
+            context.fillStyle = '#7fdfdb';
+            for (let i = 0; i < 5; i++) {
+                const x = 80 + i * 90;
+                const y = 200;
+                context.beginPath();
+                context.arc(x, y, 8, 0, Math.PI * 2);
+                context.fill();
+            }
+            
+            // 텍스처 생성
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+            
+            // 평면 지오메트리와 머티리얼
+            const planeGeometry = new THREE.PlaneGeometry(4, 2);
+            const planeMaterial = new THREE.MeshBasicMaterial({ 
+                map: texture, 
+                transparent: true,
+                side: THREE.DoubleSide
+            });
+            
+            const nameTagMesh = new THREE.Mesh(planeGeometry, planeMaterial);
+            
+            // 이름표 식별을 위한 userData 설정
+            nameTagMesh.userData.isNameTag = true;
+            
+            return nameTagMesh;
+        }
+        
+        // 🧚‍♀️ 3D 숲 도깨비들 생성
+        function createForest3DGoblins() {
+            forestGoblins.forEach((goblin, index) => {
+                const goblin3D = createForest3DGoblin(goblin, index);
+                scene.add(goblin3D);
+            });
+        }
+        
+        // 🧚‍♀️ 개별 3D 숲 도깨비 생성
+        function createForest3DGoblin(goblinData, index) {
+            const goblinGroup = new THREE.Group();
+            
+            // 도깨비 몸체 (구형)
+            const bodyGeometry = new THREE.SphereGeometry(1);
+            const bodyMaterial = new THREE.MeshPhongMaterial({ 
+                color: goblinData.color,
+                shininess: 100
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 1;
+            goblinGroup.add(body);
+            
+            // 도깨비 눈 (왼쪽)
+            const eyeGeometry = new THREE.SphereGeometry(0.15);
+            const eyeMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
+            const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            leftEye.position.set(-0.3, 1.3, 0.7);
+            goblinGroup.add(leftEye);
+            
+            // 도깨비 눈 (오른쪽)
+            const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            rightEye.position.set(0.3, 1.3, 0.7);
+            goblinGroup.add(rightEye);
+            
+            // 도깨비 눈동자 (왼쪽)
+            const pupilGeometry = new THREE.SphereGeometry(0.08);
+            const pupilMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            const leftPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
+            leftPupil.position.set(-0.3, 1.3, 0.75);
+            goblinGroup.add(leftPupil);
+            
+            // 도깨비 눈동자 (오른쪽)
+            const rightPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
+            rightPupil.position.set(0.3, 1.3, 0.75);
+            goblinGroup.add(rightPupil);
+            
+            // 도깨비 모자 (원뿔형)
+            const hatGeometry = new THREE.ConeGeometry(0.8, 1.5);
+            const hatMaterial = new THREE.MeshPhongMaterial({ 
+                color: goblinData.color,
+                transparent: true,
+                opacity: 0.8
+            });
+            const hat = new THREE.Mesh(hatGeometry, hatMaterial);
+            hat.position.y = 2.5;
+            goblinGroup.add(hat);
+            
+            // 마법 오라 (도깨비별 특별한 색상)
+            const auraGeometry = new THREE.RingGeometry(1.5, 2, 16);
+            const auraMaterial = new THREE.MeshBasicMaterial({ 
+                color: goblinData.color,
+                transparent: true,
+                opacity: 0.2,
+                side: THREE.DoubleSide
+            });
+            const aura = new THREE.Mesh(auraGeometry, auraMaterial);
+            aura.rotation.x = -Math.PI / 2;
+            aura.position.y = 0.1;
+            goblinGroup.add(aura);
+            
+            // 🏷️ 도깨비 이름표 생성
+            const nameTag = createForestGoblinNameTag(goblinData.name, goblinData.specialty);
+            nameTag.position.set(0, 4, 0);
+            goblinGroup.add(nameTag);
+            
+            // 위치 설정 (원형으로 배치)
+            const angle = (index / forestGoblins.length) * Math.PI * 2;
+            const radius = 15;
+            const x = Math.cos(angle) * radius;
+            const z = Math.sin(angle) * radius;
+            goblinGroup.position.set(x, 0, z);
+            
+            // 중심을 바라보도록 회전
+            goblinGroup.lookAt(0, 1, 0);
+            
+            // 도깨비 데이터 저장
+            goblinGroup.userData = {
+                goblinData: goblinData,
+                index: index,
+                isForestGoblin: true
+            };
+            
+            // 부드러운 떠오르는 애니메이션
+            gsap.to(goblinGroup.position, {
+                y: Math.sin(index) * 0.5,
+                duration: 3 + index * 0.5,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            // 오라 회전 애니메이션
+            gsap.to(aura.rotation, {
+                z: Math.PI * 2,
+                duration: 4 + index,
+                repeat: -1,
+                ease: "none"
+            });
+            
+            // 모자 살짝 흔들리는 애니메이션
+            gsap.to(hat.rotation, {
+                z: Math.sin(index) * 0.1,
+                duration: 2 + index * 0.3,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            return goblinGroup;
+        }
+        
+        // 🧚‍♀️ 숲 도깨비 클릭 처리 (3D)
+        function onForestCanvasClick(event) {
+            if (!camera || !scene) return;
+            
+            // 마우스 좌표를 정규화된 디바이스 좌표로 변환
+            const rect = renderer.domElement.getBoundingClientRect();
+            const mouse = new THREE.Vector2();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            
+            // 레이캐스터 설정
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(mouse, camera);
+            
+            // 모든 오브젝트와의 교차점 찾기
+            const intersects = raycaster.intersectObjects(scene.children, true);
+            
+            if (intersects.length > 0) {
+                // 클릭된 오브젝트 찾기
+                let clickedObject = intersects[0].object;
+                
+                // 부모 그룹 찾기
+                while (clickedObject && !clickedObject.userData.isForestGoblin) {
+                    clickedObject = clickedObject.parent;
+                }
+                
+                if (clickedObject && clickedObject.userData.isForestGoblin) {
+                    const goblinData = clickedObject.userData.goblinData;
+                    selectForestGoblin(goblinData);
+                    
+                    // 클릭 효과
+                    gsap.to(clickedObject.scale, {
+                        x: 1.2, y: 1.2, z: 1.2,
+                        duration: 0.2,
+                        yoyo: true,
+                        repeat: 1,
+                        ease: "power2.out"
+                    });
+                }
+            }
+        }
+        
+        // 🧚‍♀️ 숲 도깨비 카드 생성
+        function createForestGoblinCards() {
+            const gridElement = document.getElementById('forestGoblinGrid');
+            
+            forestGoblins.forEach((goblin, index) => {
+                const card = document.createElement('div');
+                card.className = 'forest-goblin-card';
+                card.onclick = () => selectForestGoblin(goblin);
+                
+                card.innerHTML = `
+                    <div class="goblin-name">${goblin.name}</div>
+                    <div class="goblin-specialty">${goblin.specialty}</div>
+                    <div style="font-size: 12px; color: #88c999;">${goblin.description}</div>
+                `;
+                
+                gridElement.appendChild(card);
+            });
+        }
+        
+        // 🧚‍♀️ 숲 도깨비 선택
+        function selectForestGoblin(goblin) {
+            updateStatus(`✨ ${goblin.name}와 대화를 시작합니다!`);
+            console.log('선택된 숲 도깨비:', goblin);
+            
+            // 채팅 창 열기
+            openChat(goblin);
+        }
+        
+        // 💬 채팅 시스템 관련 변수
+        let currentChatGoblin = null;
+        let chatHistory = [];
+        
+        // 💬 채팅 창 열기
+        function openChat(goblin) {
+            currentChatGoblin = goblin;
+            const chatContainer = document.getElementById('chatContainer');
+            const chatTitle = document.getElementById('chatTitle');
+            const chatMessages = document.getElementById('chatMessages');
+            
+            chatTitle.textContent = `${goblin.emoji} ${goblin.name}와 대화`;
+            chatContainer.style.display = 'flex';
+            
+            // 환영 메시지 추가
+            addChatMessage('ai', `안녕하세요! 저는 ${goblin.name}입니다. ${goblin.description} 무엇을 도와드릴까요?`);
+            
+            // 입력창에 포커스
+            document.getElementById('chatInput').focus();
+        }
+        
+        // 💬 채팅 창 닫기
+        function closeChat() {
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.style.display = 'none';
+            currentChatGoblin = null;
+            
+            // 채팅 기록 초기화
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML = '';
+            chatHistory = [];
+        }
+        
+        // 💬 채팅 메시지 추가
+        function addChatMessage(type, message) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${type}-message`;
+            messageDiv.textContent = message;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // 채팅 기록에 추가
+            chatHistory.push({ type, message, timestamp: new Date() });
+        }
+        
+        // 💬 채팅 입력 처리
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                const input = document.getElementById('chatInput');
+                const message = input.value.trim();
+                
+                if (message && currentChatGoblin) {
+                    // 사용자 메시지 추가
+                    addChatMessage('user', message);
+                    input.value = '';
+                    
+                    // AI 응답 생성 (시뮬레이션)
+                    setTimeout(() => {
+                        const aiResponse = generateForestGoblinResponse(message, currentChatGoblin);
+                        addChatMessage('ai', aiResponse);
+                    }, 1000);
+                }
+            }
+        }
+        
+        // 🤖 숲 도깨비 AI 응답 생성
+        function generateForestGoblinResponse(userMessage, goblin) {
+            const lowerMessage = userMessage.toLowerCase();
+            
+            // 도깨비별 특화 응답
+            switch (goblin.name) {
+                case '🌿 숲지기':
+                    if (lowerMessage.includes('나무') || lowerMessage.includes('식물')) {
+                        return "숲의 나무들은 각각 고유한 생명력을 가지고 있어요. 어떤 나무에 대해 알고 싶으신가요?";
+                    } else if (lowerMessage.includes('마법')) {
+                        return "자연 마법은 모든 생명체와의 조화에서 나와요. 나무, 풀, 바람과 대화해보세요.";
+                    } else {
+                        return "숲의 지혜를 찾고 계시는군요. 자연은 모든 답을 알고 있답니다.";
+                    }
+                    
+                case '🦋 나비술사':
+                    if (lowerMessage.includes('변화') || lowerMessage.includes('성장')) {
+                        return "변화는 자연의 가장 아름다운 마법이에요. 나비가 되기 위해 애벌레는 모든 것을 내려놓죠.";
+                    } else if (lowerMessage.includes('나비')) {
+                        return "나비들은 변화의 메신저예요. 각각의 날개 패턴은 고유한 이야기를 담고 있어요.";
+                    } else {
+                        return "아름다운 변화를 원하신다면, 먼저 현재의 모습을 사랑하는 것부터 시작하세요.";
+                    }
+                    
+                case '🌙 달빛무당':
+                    if (lowerMessage.includes('치유') || lowerMessage.includes('회복')) {
+                        return "달빛은 강력한 치유 에너지를 가지고 있어요. 마음의 상처도 천천히 아물게 해줘요.";
+                    } else if (lowerMessage.includes('달') || lowerMessage.includes('밤')) {
+                        return "밤하늘의 달은 우리의 감정과 깊이 연결되어 있어요. 달의 주기를 관찰해보세요.";
+                    } else {
+                        return "고요한 밤에 달빛을 받으며 명상하면 내면의 평화를 찾을 수 있어요.";
+                    }
+                    
+                case '🌸 꽃술사':
+                    if (lowerMessage.includes('꽃') || lowerMessage.includes('향기')) {
+                        return "각 꽃은 고유한 향기와 에너지를 가져요. 어떤 꽃의 마법에 관심이 있으신가요?";
+                    } else if (lowerMessage.includes('색깔') || lowerMessage.includes('색상')) {
+                        return "꽃의 색깔은 각각 다른 감정과 에너지를 나타내요. 빨강은 열정, 파랑은 평온이죠.";
+                    } else {
+                        return "꽃들의 언어로 마음을 전해보세요. 꽃은 말보다 더 깊은 감정을 표현할 수 있어요.";
+                    }
+                    
+                case '🦌 사슴친구':
+                    if (lowerMessage.includes('동물') || lowerMessage.includes('사슴')) {
+                        return "숲의 동물들은 순수한 마음을 가진 존재들이에요. 그들에게서 많은 것을 배울 수 있어요.";
+                    } else if (lowerMessage.includes('자유') || lowerMessage.includes('평화')) {
+                        return "사슴들처럼 자유롭고 평화로운 마음을 가져보세요. 자연 속에서 진정한 자유를 느낄 수 있어요.";
+                    } else {
+                        return "동물들의 순수한 마음을 닮아가세요. 그들은 현재 순간을 온전히 살아가는 방법을 알고 있어요.";
+                    }
+                    
+                case '✨ 반딧불요정':
+                    if (lowerMessage.includes('빛') || lowerMessage.includes('반딧불')) {
+                        return "반딧불이들은 어둠 속에서도 희망의 빛을 만들어내요. 작은 빛도 큰 변화를 만들 수 있어요.";
+                    } else if (lowerMessage.includes('어둠') || lowerMessage.includes('밤')) {
+                        return "어둠을 두려워하지 마세요. 어둠이 있어야 빛의 소중함을 알 수 있어요.";
+                    } else {
+                        return "당신도 누군가에게는 희망의 빛이 될 수 있어요. 작은 친절도 큰 빛이 됩니다.";
+                    }
+                    
+                default:
+                    return "숲의 지혜로 말씀드리자면, 자연과 조화를 이루며 살아가는 것이 가장 중요해요.";
+            }
+        }
+        
+        // 🌲 마법의 숲 환경 생성
+        function createMagicalForest() {
+            // 🌳 나무들 생성
+            for (let i = 0; i < 50; i++) {
+                createMagicalTree();
+            }
+            
+            // 🌸 마법 꽃들
+            for (let i = 0; i < 30; i++) {
+                createMagicalFlower();
+            }
+            
+            // 🦋 반딧불이들
+            for (let i = 0; i < 20; i++) {
+                createFirefly();
+            }
+            
+            // 🌙 마법의 달빛
+            createMoonlight();
+        }
+        
+        // 🌳 마법 나무 생성
+        function createMagicalTree() {
+            const treeGroup = new THREE.Group();
+            
+            // 나무 줄기
+            const trunkGeometry = new THREE.CylinderGeometry(0.3, 0.5, 8);
+            const trunkMaterial = new THREE.MeshPhongMaterial({ color: 0x8B4513 });
+            const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+            trunk.position.y = 4;
+            treeGroup.add(trunk);
+            
+            // 나무 잎사귀 (마법의 색상)
+            const leavesGeometry = new THREE.SphereGeometry(3);
+            const magicalColors = [0x00ff88, 0x88ff00, 0x0088ff, 0xff8800];
+            const leavesColor = magicalColors[Math.floor(Math.random() * magicalColors.length)];
+            const leavesMaterial = new THREE.MeshPhongMaterial({ 
+                color: leavesColor,
+                transparent: true,
+                opacity: 0.8
+            });
+            const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
+            leaves.position.y = 8;
+            treeGroup.add(leaves);
+            
+            // 랜덤 위치 배치
+            const x = (Math.random() - 0.5) * 100;
+            const z = (Math.random() - 0.5) * 100;
+            treeGroup.position.set(x, 0, z);
+            
+            // 부드러운 흔들림 애니메이션
+            gsap.to(treeGroup.rotation, {
+                y: Math.random() * 0.1 - 0.05,
+                duration: 3 + Math.random() * 2,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            scene.add(treeGroup);
+        }
+        
+        // 🌸 마법 꽃 생성
+        function createMagicalFlower() {
+            const flowerGeometry = new THREE.ConeGeometry(0.5, 1, 6);
+            const flowerColors = [0xff69b4, 0x9370db, 0x00ced1, 0xffa500];
+            const flowerColor = flowerColors[Math.floor(Math.random() * flowerColors.length)];
+            const flowerMaterial = new THREE.MeshPhongMaterial({ 
+                color: flowerColor,
+                emissive: flowerColor,
+                emissiveIntensity: 0.2
+            });
+            const flower = new THREE.Mesh(flowerGeometry, flowerMaterial);
+            
+            const x = (Math.random() - 0.5) * 80;
+            const z = (Math.random() - 0.5) * 80;
+            flower.position.set(x, 0.5, z);
+            
+            // 반짝이는 애니메이션
+            gsap.to(flower.material, {
+                emissiveIntensity: 0.5,
+                duration: 2 + Math.random(),
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            scene.add(flower);
+        }
+        
+        // 🦋 반딧불이 생성
+        function createFirefly() {
+            const fireflyGeometry = new THREE.SphereGeometry(0.1);
+            const fireflyMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xffff00,
+                transparent: true,
+                opacity: 0.8
+            });
+            const firefly = new THREE.Mesh(fireflyGeometry, fireflyMaterial);
+            
+            const x = (Math.random() - 0.5) * 60;
+            const y = 2 + Math.random() * 8;
+            const z = (Math.random() - 0.5) * 60;
+            firefly.position.set(x, y, z);
+            
+            // 자유롭게 날아다니는 애니메이션
+            gsap.to(firefly.position, {
+                x: x + (Math.random() - 0.5) * 20,
+                y: y + (Math.random() - 0.5) * 5,
+                z: z + (Math.random() - 0.5) * 20,
+                duration: 5 + Math.random() * 5,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            // 깜빡이는 효과
+            gsap.to(firefly.material, {
+                opacity: 0.2,
+                duration: 1 + Math.random(),
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            scene.add(firefly);
+        }
+        
+        // 🌙 마법의 달빛
+        function createMoonlight() {
+            const moonLight = new THREE.DirectionalLight(0x9370db, 0.5);
+            moonLight.position.set(10, 20, 10);
+            moonLight.castShadow = true;
+            scene.add(moonLight);
+            
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.3);
+            scene.add(ambientLight);
+        }
+        
+        // 🌲 마법의 숲 초기화
+        function initMagicalForest() {
+            console.log('🌲 마법의 숲 초기화 시작...');
+            
+            // Scene 생성
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+            
+            // Camera 생성
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 10, 20);
+            
+            // Renderer 생성
+            const canvas = document.getElementById('forest-canvas');
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            
+            // Controls 생성
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            
+            // 🌲 마법의 숲 환경 생성
+            createMagicalForest();
+            
+            // 🧚‍♀️ 3D 숲 도깨비들 생성
+            createForest3DGoblins();
+            
+            // 🧚‍♀️ 숲 도깨비 카드 생성
+            createForestGoblinCards();
+            
+            // 🖱️ 캔버스 클릭 이벤트 추가
+            canvas.addEventListener('click', onForestCanvasClick);
+            
+            // 시스템 준비 완료
+            isSystemReady = true;
+            updateStatus('🌲 마법의 숲이 완성되었습니다! 신비로운 모험을 시작하세요!');
+            
+            // 애니메이션 루프 시작
+            animate();
+        }
+        
+        // 🎬 애니메이션 루프
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (controls) {
+                controls.update();
+            }
+            
+            // 아바타가 있을 때 카메라가 아바타를 중심으로 회전하도록
+            if (avatar && controls) {
+                controls.target.copy(avatar.position);
+                controls.target.y += 1; // 아바타 중심 높이로 조정
+            }
+            
+            // 🏷️ 모든 이름표들이 카메라를 바라보도록 업데이트
+            scene.traverse((object) => {
+                if (object.userData && object.userData.isNameTag && camera) {
+                    object.lookAt(camera.position);
+                }
+            });
+            
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+        
+        // 📱 윈도우 리사이즈 처리
+        window.addEventListener('resize', () => {
+            if (camera && renderer) {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        });
+        
+        // 🚀 마법의 숲 시작
+        window.addEventListener('load', () => {
+            initMagicalForest();
+        });
+    </script>
+</body>
+</html>

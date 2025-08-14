@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔬 기술 단지 - 도깨비 메타버스</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
+            color: white;
+            overflow: hidden;
+        }
+        
+        #tech-canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            cursor: crosshair;
+        }
+        
+        /* 메인 UI 컨테이너 */
+        .ui-container {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        
+        .ui-container > * {
+            pointer-events: auto;
+        }
+        
+        /* 상태 표시 */
+        .status-display {
+            background: rgba(15, 15, 35, 0.9);
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 5px 15px rgba(0,255,255,0.3);
+        }
+        
+        /* 컨트롤 패널 */
+        .control-panel {
+            background: rgba(15, 15, 35, 0.95);
+            border: 2px solid #00ffff;
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 5px 20px rgba(0,255,255,0.4);
+            min-width: 300px;
+        }
+        
+        .control-btn {
+            background: linear-gradient(135deg, #00ffff 0%, #0099cc 100%);
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            padding: 12px 16px;
+            margin: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.4);
+        }
+        
+        /* 뒤로가기 버튼 */
+        .back-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1001;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            padding: 15px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+        
+        /* 기술 도깨비 카드 */
+        .tech-goblin-card {
+            background: rgba(15, 15, 35, 0.9);
+            border: 2px solid #00ffff;
+            border-radius: 15px;
+            padding: 15px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .tech-goblin-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 255, 255, 0.3);
+            border-color: #66ffff;
+        }
+        
+        .goblin-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #00ffff;
+            margin-bottom: 8px;
+        }
+        
+        .goblin-specialty {
+            font-size: 14px;
+            color: #66ddff;
+            margin-bottom: 5px;
+        }
+
+        /* 🔬 기술 채팅 시스템 */
+        .chat-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 350px;
+            height: 500px;
+            background: linear-gradient(135deg, rgba(0, 20, 40, 0.95), rgba(0, 40, 80, 0.95));
+            border: 2px solid #00ffff;
+            border-radius: 15px;
+            display: none;
+            flex-direction: column;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 10px 30px rgba(0, 255, 255, 0.3);
+            z-index: 1000;
+        }
+
+        .chat-header {
+            background: linear-gradient(90deg, #003366, #0066cc);
+            color: white;
+            padding: 15px;
+            border-radius: 13px 13px 0 0;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #00ffff;
+        }
+
+        .chat-close {
+            background: none;
+            border: none;
+            color: #00ffff;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .chat-close:hover {
+            background: rgba(0, 255, 255, 0.2);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: rgba(0, 30, 60, 0.8);
+        }
+
+        .message {
+            margin: 10px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .message.user-message {
+            flex-direction: row-reverse;
+        }
+
+        .message .avatar {
+            min-width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0066cc, #00ffff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .message.user-message .avatar {
+            background: linear-gradient(135deg, #004080, #0080ff);
+        }
+
+        .message .text {
+            background: rgba(0, 100, 200, 0.3);
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 250px;
+            word-wrap: break-word;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            color: #e6f3ff;
+        }
+
+        .message.user-message .text {
+            background: rgba(0, 150, 255, 0.3);
+            border-color: rgba(0, 200, 255, 0.3);
+        }
+
+        .chat-input-container {
+            padding: 15px;
+            border-top: 1px solid rgba(0, 255, 255, 0.3);
+            background: rgba(0, 40, 80, 0.9);
+            border-radius: 0 0 13px 13px;
+        }
+
+        .chat-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #00ffff;
+            border-radius: 20px;
+            background: rgba(0, 30, 60, 0.8);
+            color: #e6f3ff;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: #66ffff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        .chat-input::placeholder {
+            color: #66ddff;
+        }
+    </style>
+</head>
+<body>
+    <!-- 뒤로가기 버튼 -->
+    <button class="back-btn" onclick="goBackToVillage()">← 🏘️ 도깨비 마을로</button>
+    
+    <!-- 메인 캔버스 -->
+    <canvas id="tech-canvas"></canvas>
+    
+    <!-- UI 컨테이너 -->
+    <div class="ui-container">
+        <!-- 상태 표시 -->
+        <div class="status-display" id="statusDisplay">
+            🔬 기술 단지에 오신 것을 환영합니다!
+        </div>
+        
+        <!-- 🔬 채팅 시스템 -->
+        <div class="chat-container" id="chatContainer">
+            <div class="chat-header">
+                <span id="chatTitle">🔬 기술 도깨비와의 대화</span>
+                <button class="chat-close" onclick="closeChat()">×</button>
+            </div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input-container">
+                <input type="text" class="chat-input" id="chatInput" 
+                       placeholder="기술에 대해 질문해보세요..." 
+                       onkeypress="handleChatKeyPress(event)">
+            </div>
+        </div>
+        
+        <!-- 컨트롤 패널 -->
+        <div class="control-panel">
+            <h2 style="color: #00ffff; margin-bottom: 15px; text-align: center;">🔬 기술 단지</h2>
+            
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: #00ffff; margin-bottom: 10px; font-size: 16px;">🎮 컨트롤</h3>
+                <button class="control-btn" onclick="toggleAvatar()">🤖 사이버 아바타</button>
+                <button class="control-btn" onclick="resetCamera()">📷 카메라 리셋</button>
+                <button class="control-btn" onclick="toggleHologram()">🌈 홀로그램 모드</button>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: #00ffff; margin-bottom: 10px; font-size: 16px;">🚀 기술 도깨비들</h3>
+                <div id="techGoblinGrid">
+                    <!-- 기술 도깨비들이 여기에 생성됩니다 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Three.js 및 GSAP 라이브러리 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+    <script>
+        // 🔬 기술 단지 전역 변수
+        let scene, camera, renderer, controls;
+        let currentChatGoblin = null; // 🔬 현재 채팅 중인 도깨비
+        let avatar = null;
+        let isSystemReady = false;
+        
+        // 🚀 최첨단 기술 도깨비들
+        const techGoblins = [
+            { name: '🤖 AI연구원', specialty: '인공지능', description: '차세대 AI 알고리즘을 개발하는 도깨비', emoji: '🤖', color: 0x00ffff },
+            { name: '🧬 바이오해커', specialty: '생명공학', description: '생명의 비밀을 탐구하는 과학 도깨비', emoji: '🧬', color: 0x00ff00 },
+            { name: '🚀 우주공학자', specialty: '항공우주', description: '별들 사이를 누비는 우주선을 설계하는 도깨비', emoji: '🚀', color: 0xff6600 },
+            { name: '💻 코드마법사', specialty: '소프트웨어', description: '완벽한 코드로 세상을 바꾸는 도깨비', emoji: '💻', color: 0x9900ff },
+            { name: '⚡ 에너지혁신가', specialty: '신재생에너지', description: '무한 청정 에너지를 만들어내는 도깨비', emoji: '⚡', color: 0xffff00 },
+            { name: '🔮 양자물리학자', specialty: '양자역학', description: '양자의 신비를 풀어내는 도깨비', emoji: '🔮', color: 0xff00ff }
+        ];
+        
+        // 🎯 상태 업데이트 함수
+        function updateStatus(message) {
+            const statusElement = document.getElementById('statusDisplay');
+            if (statusElement) {
+                statusElement.textContent = message;
+            }
+        }
+        
+        // 🔙 도깨비 마을로 돌아가기
+        function goBackToVillage() {
+            updateStatus('🏘️ 도깨비 마을로 돌아가는 중...');
+            // GitHub Pages용 베이스 URL 계산
+            const baseURL = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/');
+            setTimeout(() => {
+                window.location.href = baseURL + 'index.html';
+            }, 1000);
+        }
+        
+        // 🎮 아바타 토글
+        function toggleAvatar() {
+            if (!avatar) {
+                createAvatar();
+            } else {
+                removeAvatar();
+            }
+        }
+        
+        // 🤖 사이버 아바타 생성
+        function createAvatar() {
+            avatar = new THREE.Group();
+            
+            // 사이버 몸체 (육각형)
+            const bodyGeometry = new THREE.CylinderGeometry(0.4, 0.5, 1.8, 6);
+            const bodyMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x00ffff,
+                transparent: true,
+                opacity: 0.8,
+                emissive: 0x003333
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 1;
+            avatar.add(body);
+            
+            // 홀로그램 헤드
+            const headGeometry = new THREE.SphereGeometry(0.5, 8, 6);
+            const headMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x00ffff,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.7
+            });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 2.5;
+            avatar.add(head);
+            
+            // 사이버 팔들
+            const armGeometry = new THREE.CylinderGeometry(0.1, 0.12, 1.2);
+            const armMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x0099cc,
+                emissive: 0x002233
+            });
+            
+            const leftArm = new THREE.Mesh(armGeometry, armMaterial);
+            leftArm.position.set(-0.6, 1, 0);
+            leftArm.rotation.z = 0.3;
+            avatar.add(leftArm);
+            
+            const rightArm = new THREE.Mesh(armGeometry, armMaterial);
+            rightArm.position.set(0.6, 1, 0);
+            rightArm.rotation.z = -0.3;
+            avatar.add(rightArm);
+            
+            // 홀로그램 링들
+            for (let i = 0; i < 3; i++) {
+                const ringGeometry = new THREE.RingGeometry(1 + i * 0.3, 1.2 + i * 0.3, 16);
+                const ringMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0x00ffff,
+                    transparent: true,
+                    opacity: 0.3,
+                    side: THREE.DoubleSide
+                });
+                const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+                ring.rotation.x = -Math.PI / 2;
+                ring.position.y = 0.1;
+                avatar.add(ring);
+                
+                gsap.to(ring.rotation, {
+                    z: Math.PI * 2,
+                    duration: 3 - i * 0.5,
+                    repeat: -1,
+                    ease: "none"
+                });
+            }
+            
+            avatar.position.set(0, 0, 0);
+            scene.add(avatar);
+            
+            if (camera && controls) {
+                gsap.to(camera.position, {
+                    x: 5, y: 8, z: 12,
+                    duration: 1.5,
+                    ease: "power2.out"
+                });
+                gsap.to(controls.target, {
+                    x: 0, y: 1, z: 0,
+                    duration: 1.5,
+                    ease: "power2.out",
+                    onUpdate: () => controls.update()
+                });
+            }
+            
+            updateStatus('🤖 사이버 아바타가 활성화되었습니다!');
+        }
+        
+        // 🤖 아바타 제거
+        function removeAvatar() {
+            if (avatar) {
+                while(avatar.children.length > 0) {
+                    const child = avatar.children[0];
+                    avatar.remove(child);
+                    if (child.geometry) child.geometry.dispose();
+                    if (child.material) child.material.dispose();
+                }
+                scene.remove(avatar);
+                avatar = null;
+                updateStatus('👋 사이버 아바타가 비활성화되었습니다');
+            }
+        }
+        
+        // 📷 카메라 리셋
+        function resetCamera() {
+            if (camera && controls) {
+                gsap.to(camera.position, {
+                    x: 0, y: 20, z: 30,
+                    duration: 1.5,
+                    ease: "power2.out"
+                });
+                gsap.to(controls.target, {
+                    x: 0, y: 0, z: 0,
+                    duration: 1.5,
+                    ease: "power2.out",
+                    onUpdate: () => controls.update()
+                });
+                updateStatus('📷 카메라가 기술 단지 중심으로 리셋되었습니다');
+            }
+        }
+        
+        // 🌈 홀로그램 모드 토글
+        function toggleHologram() {
+            const modes = ['🌈 홀로그램', '⚡ 에너지 필드', '🔮 양자 공간', '💎 크리스털'];
+            const randomMode = modes[Math.floor(Math.random() * modes.length)];
+            updateStatus(`🔬 기술 단지가 ${randomMode} 모드로 변환되었습니다`);
+        }
+        
+        // 🏷️ 기술 도깨비 이름표 생성
+        function createTechGoblinNameTag(name, specialty) {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = 512;
+            canvas.height = 256;
+            
+            // 사이버 배경
+            const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, 'rgba(0, 15, 35, 0.9)');
+            gradient.addColorStop(1, 'rgba(0, 51, 102, 0.9)');
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 네온 테두리
+            context.strokeStyle = '#00ffff';
+            context.lineWidth = 6;
+            context.strokeRect(3, 3, canvas.width - 6, canvas.height - 6);
+            
+            // 내부 발광 효과
+            context.strokeStyle = '#66ffff';
+            context.lineWidth = 2;
+            context.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
+            
+            // 이름 텍스트 (네온 효과)
+            context.shadowColor = '#00ffff';
+            context.shadowBlur = 20;
+            context.fillStyle = '#00ffff';
+            context.font = 'bold 42px Arial';
+            context.textAlign = 'center';
+            context.fillText(name, canvas.width / 2, 80);
+            
+            // 전문 분야 텍스트
+            context.shadowBlur = 10;
+            context.fillStyle = '#66ddff';
+            context.font = '28px Arial';
+            context.fillText(specialty, canvas.width / 2, 130);
+            
+            // 사이버 그리드 라인들
+            context.shadowBlur = 0;
+            context.strokeStyle = '#0099cc';
+            context.lineWidth = 1;
+            for (let i = 0; i < 10; i++) {
+                const x = (i + 1) * canvas.width / 11;
+                context.beginPath();
+                context.moveTo(x, 160);
+                context.lineTo(x, 180);
+                context.stroke();
+            }
+            
+            // 홀로그램 점들
+            context.fillStyle = '#00ffff';
+            for (let i = 0; i < 8; i++) {
+                const x = 60 + i * 50;
+                const y = 200;
+                context.beginPath();
+                context.arc(x, y, 4, 0, Math.PI * 2);
+                context.fill();
+                
+                // 작은 발광 효과
+                context.shadowColor = '#00ffff';
+                context.shadowBlur = 8;
+                context.fill();
+                context.shadowBlur = 0;
+            }
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+            
+            const planeGeometry = new THREE.PlaneGeometry(4, 2);
+            const planeMaterial = new THREE.MeshBasicMaterial({ 
+                map: texture, 
+                transparent: true,
+                side: THREE.DoubleSide
+            });
+            
+            const nameTagMesh = new THREE.Mesh(planeGeometry, planeMaterial);
+            nameTagMesh.userData.isNameTag = true;
+            
+            return nameTagMesh;
+        }
+        
+        // 🚀 3D 기술 도깨비들 생성
+        function createTech3DGoblins() {
+            techGoblins.forEach((goblin, index) => {
+                const goblin3D = createTech3DGoblin(goblin, index);
+                scene.add(goblin3D);
+            });
+        }
+        
+        // 🚀 개별 3D 기술 도깨비 생성
+        function createTech3DGoblin(goblinData, index) {
+            const goblinGroup = new THREE.Group();
+            
+            // 미래형 몸체 (다면체)
+            const bodyGeometry = new THREE.OctahedronGeometry(1.2);
+            const bodyMaterial = new THREE.MeshPhongMaterial({ 
+                color: goblinData.color,
+                shininess: 100,
+                transparent: true,
+                opacity: 0.8,
+                emissive: goblinData.color,
+                emissiveIntensity: 0.2
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 1.5;
+            goblinGroup.add(body);
+            
+            // 홀로그램 헤드
+            const headGeometry = new THREE.IcosahedronGeometry(0.8);
+            const headMaterial = new THREE.MeshBasicMaterial({ 
+                color: goblinData.color,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.6
+            });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 3;
+            goblinGroup.add(head);
+            
+            // 기술 안테나들
+            for (let i = 0; i < 4; i++) {
+                const antennaGeometry = new THREE.CylinderGeometry(0.02, 0.05, 1.5);
+                const antennaMaterial = new THREE.MeshBasicMaterial({ 
+                    color: goblinData.color,
+                    emissive: goblinData.color,
+                    emissiveIntensity: 0.5
+                });
+                const antenna = new THREE.Mesh(antennaGeometry, antennaMaterial);
+                
+                const angle = (i / 4) * Math.PI * 2;
+                antenna.position.set(
+                    Math.cos(angle) * 0.8,
+                    3.8,
+                    Math.sin(angle) * 0.8
+                );
+                antenna.rotation.z = angle;
+                goblinGroup.add(antenna);
+            }
+            
+            // 에너지 코어
+            const coreGeometry = new THREE.SphereGeometry(0.3);
+            const coreMaterial = new THREE.MeshBasicMaterial({ 
+                color: goblinData.color,
+                transparent: true,
+                opacity: 0.8
+            });
+            const core = new THREE.Mesh(coreGeometry, coreMaterial);
+            core.position.y = 1.5;
+            goblinGroup.add(core);
+            
+            // 홀로그램 오라들
+            for (let i = 0; i < 3; i++) {
+                const auraGeometry = new THREE.RingGeometry(1.8 + i * 0.4, 2.2 + i * 0.4, 16);
+                const auraMaterial = new THREE.MeshBasicMaterial({ 
+                    color: goblinData.color,
+                    transparent: true,
+                    opacity: 0.15,
+                    side: THREE.DoubleSide
+                });
+                const aura = new THREE.Mesh(auraGeometry, auraMaterial);
+                aura.rotation.x = -Math.PI / 2;
+                aura.position.y = 0.1;
+                goblinGroup.add(aura);
+                
+                gsap.to(aura.rotation, {
+                    z: Math.PI * 2,
+                    duration: 4 + i,
+                    repeat: -1,
+                    ease: "none"
+                });
+            }
+            
+            // 이름표 추가
+            const nameTag = createTechGoblinNameTag(goblinData.name, goblinData.specialty);
+            nameTag.position.set(0, 5.5, 0);
+            goblinGroup.add(nameTag);
+            
+            // 위치 설정 (육각형 배치)
+            const angle = (index / techGoblins.length) * Math.PI * 2;
+            const radius = 22;
+            const x = Math.cos(angle) * radius;
+            const z = Math.sin(angle) * radius;
+            goblinGroup.position.set(x, 0, z);
+            
+            goblinGroup.lookAt(0, 1, 0);
+            
+            goblinGroup.userData = {
+                goblinData: goblinData,
+                index: index,
+                isTechGoblin: true
+            };
+            
+            // 미래형 애니메이션
+            gsap.to(goblinGroup.position, {
+                y: Math.sin(index) * 0.5,
+                duration: 3 + index * 0.4,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            // 몸체 회전
+            gsap.to(body.rotation, {
+                y: Math.PI * 2,
+                duration: 8 + index,
+                repeat: -1,
+                ease: "none"
+            });
+            
+            // 헤드 회전
+            gsap.to(head.rotation, {
+                x: Math.PI * 2,
+                y: Math.PI * 2,
+                duration: 6 + index * 0.5,
+                repeat: -1,
+                ease: "none"
+            });
+            
+            // 코어 펄스
+            gsap.to(core.scale, {
+                x: 1.5, y: 1.5, z: 1.5,
+                duration: 2,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            return goblinGroup;
+        }
+        
+        // 🚀 기술 도깨비 클릭 처리
+        function onTechCanvasClick(event) {
+            if (!camera || !scene) return;
+            
+            const rect = renderer.domElement.getBoundingClientRect();
+            const mouse = new THREE.Vector2();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(mouse, camera);
+            
+            const intersects = raycaster.intersectObjects(scene.children, true);
+            
+            if (intersects.length > 0) {
+                let clickedObject = intersects[0].object;
+                
+                while (clickedObject && !clickedObject.userData.isTechGoblin) {
+                    clickedObject = clickedObject.parent;
+                }
+                
+                if (clickedObject && clickedObject.userData.isTechGoblin) {
+                    const goblinData = clickedObject.userData.goblinData;
+                    selectTechGoblin(goblinData);
+                    
+                    gsap.to(clickedObject.scale, {
+                        x: 1.3, y: 1.3, z: 1.3,
+                        duration: 0.2,
+                        yoyo: true,
+                        repeat: 1,
+                        ease: "power2.out"
+                    });
+                }
+            }
+        }
+        
+        // 🚀 기술 도깨비 카드 생성
+        function createTechGoblinCards() {
+            const gridElement = document.getElementById('techGoblinGrid');
+            
+            techGoblins.forEach((goblin, index) => {
+                const card = document.createElement('div');
+                card.className = 'tech-goblin-card';
+                card.onclick = () => selectTechGoblin(goblin);
+                
+                card.innerHTML = `
+                    <div class="goblin-name">${goblin.name}</div>
+                    <div class="goblin-specialty">${goblin.specialty}</div>
+                    <div style="font-size: 12px; color: #99ddff;">${goblin.description}</div>
+                `;
+                
+                gridElement.appendChild(card);
+            });
+        }
+        
+        // 🚀 기술 도깨비 선택
+        function selectTechGoblin(goblin) {
+            updateStatus(`🚀 ${goblin.name}과 기술 연구를 시작합니다!`);
+            console.log('선택된 기술 도깨비:', goblin);
+            
+            // 🔬 채팅 시스템 열기
+            openChat(goblin);
+            
+            setTimeout(() => {
+                updateStatus(`🔬 ${goblin.name}: "${goblin.description}"`);
+            }, 1500);
+        }
+
+        // 🔬 채팅 시스템 열기
+        function openChat(goblin) {
+            currentChatGoblin = goblin;
+            
+            const chatContainer = document.getElementById('chatContainer');
+            const chatTitle = document.getElementById('chatTitle');
+            const chatMessages = document.getElementById('chatMessages');
+            
+            chatTitle.textContent = `🔬 ${goblin.name}과의 기술 대화`;
+            chatMessages.innerHTML = `
+                <div class="message goblin-message">
+                    <div class="avatar">🔬</div>
+                    <div class="text">${goblin.name}: 안녕하세요! 기술 단지에 오신 것을 환영합니다. 어떤 기술에 대해 이야기하고 싶으신가요? 🚀✨</div>
+                </div>
+            `;
+            
+            chatContainer.style.display = 'flex';
+            document.getElementById('chatInput').focus();
+        }
+
+        // 🔬 채팅 시스템 닫기
+        function closeChat() {
+            document.getElementById('chatContainer').style.display = 'none';
+            currentChatGoblin = null;
+        }
+
+        // 🔬 채팅 입력 처리
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+
+        // 🔬 채팅 메시지 전송
+        function sendChatMessage() {
+            const chatInput = document.getElementById('chatInput');
+            const message = chatInput.value.trim();
+            
+            if (message && currentChatGoblin) {
+                const chatMessages = document.getElementById('chatMessages');
+                
+                // 사용자 메시지 추가
+                chatMessages.innerHTML += `
+                    <div class="message user-message">
+                        <div class="text">${message}</div>
+                        <div class="avatar">👤</div>
+                    </div>
+                `;
+                
+                // 도깨비 응답 생성
+                const response = generateTechGoblinResponse(currentChatGoblin, message);
+                
+                setTimeout(() => {
+                    chatMessages.innerHTML += `
+                        <div class="message goblin-message">
+                            <div class="avatar">🔬</div>
+                            <div class="text">${currentChatGoblin.name}: ${response}</div>
+                        </div>
+                    `;
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }, 1000);
+                
+                chatInput.value = '';
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+
+        // 🔬 기술 도깨비 AI 응답 생성
+        function generateTechGoblinResponse(goblin, userMessage) {
+            const message = userMessage.toLowerCase();
+            
+            // 기술 분야별 전문 응답
+            if (goblin.name === '코딩마법사') {
+                if (message.includes('코딩') || message.includes('프로그래밍') || message.includes('개발')) {
+                    return "프로그래밍은 논리적 사고와 창의성의 결합입니다! Python, JavaScript, Java 중 어떤 언어에 관심이 있으신가요? 💻✨";
+                } else if (message.includes('알고리즘') || message.includes('자료구조')) {
+                    return "효율적인 알고리즘은 좋은 소프트웨어의 핵심입니다. 정렬, 탐색, 그래프 알고리즘 중 어떤 것이 궁금하신가요? 🧠🔍";
+                } else if (message.includes('버그') || message.includes('디버깅')) {
+                    return "디버깅은 탐정 작업과 같습니다! 로그를 확인하고, 단계별로 추적하며, 가설을 세워보세요. 어떤 문제를 겪고 계신가요? 🕵️‍♂️🐛";
+                }
+            } else if (goblin.name === 'AI연구원') {
+                if (message.includes('ai') || message.includes('인공지능') || message.includes('머신러닝')) {
+                    return "AI는 인간의 지능을 모방하는 기술입니다. 머신러닝, 딥러닝, 자연어처리 중 어떤 분야에 관심이 있으신가요? 🤖🧠";
+                } else if (message.includes('신경망') || message.includes('딥러닝')) {
+                    return "신경망은 인간의 뇌를 모델로 한 학습 알고리즘입니다. CNN, RNN, Transformer 등 다양한 구조가 있어요! 🧬⚡";
+                } else if (message.includes('데이터') || message.includes('학습')) {
+                    return "데이터는 AI의 연료입니다! 양질의 데이터와 적절한 전처리가 성공적인 AI 모델의 핵심이죠. 📊🔬";
+                }
+            } else if (goblin.name === '로봇공학자') {
+                if (message.includes('로봇') || message.includes('자동화') || message.includes('기계')) {
+                    return "로봇공학은 기계, 전자, 소프트웨어의 융합 기술입니다! 산업용 로봇부터 휴머노이드까지 다양한 분야가 있어요. 🤖⚙️";
+                } else if (message.includes('센서') || message.includes('제어')) {
+                    return "센서는 로봇의 감각기관이고, 제어 시스템은 두뇌입니다. PID 제어, 피드백 시스템에 대해 이야기해볼까요? 📡🎛️";
+                } else if (message.includes('미래') || message.includes('자율주행')) {
+                    return "자율주행, 의료 로봇, 가정용 로봇 등 로봇의 미래는 무궁무진합니다! 어떤 분야의 로봇이 가장 기대되시나요? 🚗🏥";
+                }
+            } else if (goblin.name === '데이터분석가') {
+                if (message.includes('데이터') || message.includes('분석') || message.includes('통계')) {
+                    return "데이터 분석은 숨겨진 패턴을 찾는 보물찾기입니다! Python, R, SQL 등으로 데이터를 탐험해보세요. 📊💎";
+                } else if (message.includes('시각화') || message.includes('차트')) {
+                    return "데이터 시각화는 복잡한 정보를 직관적으로 전달합니다. Matplotlib, Seaborn, D3.js로 아름다운 차트를 만들어보세요! 📈🎨";
+                } else if (message.includes('빅데이터') || message.includes('예측')) {
+                    return "빅데이터는 미래를 예측하는 수정구슬입니다! 하둡, 스파크 같은 기술로 대용량 데이터를 처리할 수 있어요. 🔮💻";
+                }
+            } else if (goblin.name === '사이버보안') {
+                if (message.includes('보안') || message.includes('해킹') || message.includes('사이버')) {
+                    return "사이버 보안은 디지털 세상의 방패입니다! 암호화, 방화벽, 침입 탐지 시스템으로 우리를 보호해요. 🛡️🔒";
+                } else if (message.includes('암호화') || message.includes('비밀번호')) {
+                    return "강력한 암호화는 정보 보안의 핵심입니다. AES, RSA 같은 암호화 알고리즘과 안전한 패스워드 관리가 중요해요! 🔐🔑";
+                } else if (message.includes('피싱') || message.includes('악성코드')) {
+                    return "사이버 공격은 날로 정교해지고 있습니다. 의심스러운 이메일, 알 수 없는 링크는 피하고 항상 경계를 늦추지 마세요! ⚠️🦠";
+                }
+            } else if (goblin.name === '블록체인') {
+                if (message.includes('블록체인') || message.includes('비트코인') || message.includes('암호화폐')) {
+                    return "블록체인은 탈중앙화된 신뢰 시스템입니다! 비트코인부터 스마트 계약까지, 금융을 혁신하고 있어요. ⛓️💰";
+                } else if (message.includes('스마트계약') || message.includes('이더리움')) {
+                    return "스마트 계약은 코드로 작성된 자동 실행 계약입니다. 이더리움에서 Solidity로 개발할 수 있어요! 📜⚡";
+                } else if (message.includes('nft') || message.includes('디파이')) {
+                    return "NFT와 DeFi는 블록체인의 새로운 응용 분야입니다. 디지털 자산과 탈중앙화 금융의 미래를 만들어가고 있어요! 🎨💳";
+                }
+            }
+            
+            // 일반적인 기술 응답
+            const generalResponses = [
+                `${goblin.name}이 ${goblin.description.slice(0, 50)}... 더 자세히 알고 싶은 것이 있으신가요? 🔬✨`,
+                "기술의 세계는 빠르게 변화하고 있습니다. 함께 최신 트렌드를 탐구해봅시다! 🚀💡",
+                "혁신은 호기심에서 시작됩니다. 어떤 기술이 가장 흥미로우신가요? 🤔💭",
+                "코딩과 창의성의 만남이 새로운 가능성을 열어줍니다! 무엇을 만들어보고 싶으신가요? 💻🎯",
+                "미래는 우리가 오늘 작성하는 코드로 만들어집니다! 함께 더 나은 세상을 코딩해봅시다. 🌟💻"
+            ];
+            
+            return generalResponses[Math.floor(Math.random() * generalResponses.length)];
+        }
+        
+        // 🔬 기술 단지 환경 생성
+        function createTechEnvironment() {
+            // 🏗️ 연구소 건물들
+            for (let i = 0; i < 15; i++) {
+                createResearchFacility();
+            }
+            
+            // 🛸 플라잉 드론들
+            for (let i = 0; i < 12; i++) {
+                createDrone();
+            }
+            
+            // 🌐 홀로그램 플랫폼들
+            for (let i = 0; i < 8; i++) {
+                createHologramPlatform();
+            }
+            
+            // ⚡ 에너지 필드 생성
+            createEnergyField();
+        }
+        
+        // 🏗️ 연구소 건물 생성
+        function createResearchFacility() {
+            const facilityGroup = new THREE.Group();
+            
+            const height = 12 + Math.random() * 15;
+            const size = 4 + Math.random() * 3;
+            
+            // 메인 구조물
+            const buildingGeometry = new THREE.CylinderGeometry(size, size * 1.2, height, 8);
+            const buildingMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x1a2332,
+                transparent: true,
+                opacity: 0.8
+            });
+            const building = new THREE.Mesh(buildingGeometry, buildingMaterial);
+            building.position.y = height / 2;
+            facilityGroup.add(building);
+            
+            // 홀로그램 링들
+            for (let ring = 0; ring < 3; ring++) {
+                const ringGeometry = new THREE.RingGeometry(size + 0.5, size + 1, 16);
+                const ringMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0x00ffff,
+                    transparent: true,
+                    opacity: 0.4,
+                    side: THREE.DoubleSide
+                });
+                const ringMesh = new THREE.Mesh(ringGeometry, ringMaterial);
+                ringMesh.rotation.x = -Math.PI / 2;
+                ringMesh.position.y = (ring + 1) * height / 4;
+                facilityGroup.add(ringMesh);
+                
+                gsap.to(ringMesh.rotation, {
+                    z: Math.PI * 2,
+                    duration: 6 + ring,
+                    repeat: -1,
+                    ease: "none"
+                });
+            }
+            
+            // 에너지 코어
+            const coreGeometry = new THREE.SphereGeometry(0.8);
+            const coreMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x00ffff,
+                transparent: true,
+                opacity: 0.6
+            });
+            const core = new THREE.Mesh(coreGeometry, coreMaterial);
+            core.position.y = height + 1;
+            facilityGroup.add(core);
+            
+            gsap.to(core.material, {
+                opacity: 0.2,
+                duration: 2,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            const x = (Math.random() - 0.5) * 80;
+            const z = (Math.random() - 0.5) * 80;
+            facilityGroup.position.set(x, 0, z);
+            
+            scene.add(facilityGroup);
+        }
+        
+        // 🛸 드론 생성
+        function createDrone() {
+            const droneGroup = new THREE.Group();
+            
+            const bodyGeometry = new THREE.SphereGeometry(0.5, 8, 6);
+            const bodyMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x0099cc,
+                emissive: 0x003366,
+                emissiveIntensity: 0.3
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            droneGroup.add(body);
+            
+            // 프로펠러들
+            for (let i = 0; i < 4; i++) {
+                const propGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.3);
+                const propMaterial = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+                const prop = new THREE.Mesh(propGeometry, propMaterial);
+                
+                const angle = (i / 4) * Math.PI * 2;
+                prop.position.set(Math.cos(angle) * 0.8, 0, Math.sin(angle) * 0.8);
+                droneGroup.add(prop);
+                
+                gsap.to(prop.rotation, {
+                    y: Math.PI * 2,
+                    duration: 0.1,
+                    repeat: -1,
+                    ease: "none"
+                });
+            }
+            
+            const x = (Math.random() - 0.5) * 60;
+            const y = 8 + Math.random() * 12;
+            const z = (Math.random() - 0.5) * 60;
+            droneGroup.position.set(x, y, z);
+            
+            // 자유 비행 패턴
+            gsap.to(droneGroup.position, {
+                x: x + (Math.random() - 0.5) * 30,
+                y: y + (Math.random() - 0.5) * 8,
+                z: z + (Math.random() - 0.5) * 30,
+                duration: 8 + Math.random() * 4,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            scene.add(droneGroup);
+        }
+        
+        // 🌐 홀로그램 플랫폼 생성
+        function createHologramPlatform() {
+            const platformGroup = new THREE.Group();
+            
+            const platformGeometry = new THREE.CylinderGeometry(3, 3, 0.2);
+            const platformMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x0066cc,
+                transparent: true,
+                opacity: 0.5
+            });
+            const platform = new THREE.Mesh(platformGeometry, platformMaterial);
+            platformGroup.add(platform);
+            
+            // 홀로그램 기둥들
+            for (let i = 0; i < 8; i++) {
+                const pillarGeometry = new THREE.CylinderGeometry(0.1, 0.1, 4);
+                const pillarMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0x00ffff,
+                    transparent: true,
+                    opacity: 0.6
+                });
+                const pillar = new THREE.Mesh(pillarGeometry, pillarMaterial);
+                
+                const angle = (i / 8) * Math.PI * 2;
+                pillar.position.set(Math.cos(angle) * 2.5, 2, Math.sin(angle) * 2.5);
+                platformGroup.add(pillar);
+            }
+            
+            const x = (Math.random() - 0.5) * 70;
+            const z = (Math.random() - 0.5) * 70;
+            platformGroup.position.set(x, 0, z);
+            
+            gsap.to(platformGroup.rotation, {
+                y: Math.PI * 2,
+                duration: 12,
+                repeat: -1,
+                ease: "none"
+            });
+            
+            scene.add(platformGroup);
+        }
+        
+        // ⚡ 에너지 필드 생성
+        function createEnergyField() {
+            const ambientLight = new THREE.AmbientLight(0x003366, 0.3);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0x00ffff, 0.8);
+            directionalLight.position.set(15, 25, 15);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+            
+            // 홀로그램 조명들
+            for (let i = 0; i < 8; i++) {
+                const holoLight = new THREE.PointLight(0x00ffff, 1, 25);
+                holoLight.position.set(
+                    (Math.random() - 0.5) * 50,
+                    8 + Math.random() * 15,
+                    (Math.random() - 0.5) * 50
+                );
+                scene.add(holoLight);
+                
+                // 깜빡이는 효과
+                gsap.to(holoLight, {
+                    intensity: 0.2,
+                    duration: 1 + Math.random(),
+                    repeat: -1,
+                    yoyo: true,
+                    ease: "sine.inOut"
+                });
+            }
+        }
+        
+        // 🔬 기술 단지 초기화
+        function initTechDistrict() {
+            console.log('🔬 기술 단지 초기화 시작...');
+            
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a1a);
+            
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 20, 30);
+            
+            const canvas = document.getElementById('tech-canvas');
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            
+            // 🔬 기술 단지 환경 생성
+            createTechEnvironment();
+            
+            // 🚀 3D 기술 도깨비들 생성
+            createTech3DGoblins();
+            
+            // 🚀 기술 도깨비 카드 생성
+            createTechGoblinCards();
+            
+            // 🖱️ 캔버스 클릭 이벤트 추가
+            canvas.addEventListener('click', onTechCanvasClick);
+            
+            isSystemReady = true;
+            updateStatus('🔬 기술 단지가 완성되었습니다! 미래 기술을 탐험하세요!');
+            
+            animate();
+        }
+        
+        // 🎬 애니메이션 루프
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (controls) {
+                controls.update();
+            }
+            
+            if (avatar && controls) {
+                controls.target.copy(avatar.position);
+                controls.target.y += 1;
+            }
+            
+            // 🏷️ 모든 이름표들이 카메라를 바라보도록 업데이트
+            scene.traverse((object) => {
+                if (object.userData && object.userData.isNameTag && camera) {
+                    object.lookAt(camera.position);
+                }
+            });
+            
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+        
+        // 📱 윈도우 리사이즈 처리
+        window.addEventListener('resize', () => {
+            if (camera && renderer) {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        });
+        
+        // 🚀 기술 단지 시작
+        window.addEventListener('load', () => {
+            initTechDistrict();
+        });
+    </script>
+</body>
+</html>

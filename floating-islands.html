@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏝️ 떠다니는 섬들 - 도깨비 메타버스</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #87ceeb 0%, #98d8e8 50%, #b8d8ff 100%);
+            color: white;
+            overflow: hidden;
+        }
+        
+        #floating-islands-canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            cursor: crosshair;
+        }
+        
+        /* 메인 UI 컨테이너 */
+        .ui-container {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        
+        .ui-container > * {
+            pointer-events: auto;
+        }
+        
+        /* 상태 표시 */
+        .status-display {
+            background: rgba(135, 206, 235, 0.9);
+            border: 2px solid #ffffff;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+            color: #2c3e50;
+        }
+        
+        /* 컨트롤 패널 */
+        .control-panel {
+            background: rgba(135, 206, 235, 0.95);
+            border: 2px solid #ffffff;
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 5px 20px rgba(255, 255, 255, 0.4);
+            min-width: 300px;
+            color: #2c3e50;
+        }
+        
+        .control-btn {
+            background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+            border: none;
+            border-radius: 8px;
+            color: #2c3e50;
+            padding: 12px 16px;
+            margin: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.4);
+        }
+        
+        /* 뒤로가기 버튼 */
+        .back-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1001;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            padding: 15px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+        
+        /* 하늘 도깨비 카드 */
+        .sky-goblin-card {
+            background: rgba(135, 206, 235, 0.9);
+            border: 2px solid #ffffff;
+            border-radius: 15px;
+            padding: 15px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            color: #2c3e50;
+        }
+        
+        .sky-goblin-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
+            border-color: #87ceeb;
+        }
+        
+        .goblin-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .goblin-specialty {
+            font-size: 14px;
+            color: #34495e;
+            margin-bottom: 5px;
+        }
+
+        /* 🏝️ 하늘 채팅 시스템 */
+        .chat-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 350px;
+            height: 500px;
+            background: linear-gradient(135deg, rgba(135, 206, 235, 0.95), rgba(255, 255, 255, 0.9));
+            border: 2px solid #87ceeb;
+            border-radius: 15px;
+            display: none;
+            flex-direction: column;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 10px 30px rgba(135, 206, 235, 0.4);
+            z-index: 1000;
+        }
+
+        .chat-header {
+            background: linear-gradient(90deg, #87ceeb, #ffffff);
+            color: #2c3e50;
+            padding: 15px;
+            border-radius: 13px 13px 0 0;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #87ceeb;
+        }
+
+        .chat-close {
+            background: none;
+            border: none;
+            color: #2c3e50;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .chat-close:hover {
+            background: rgba(135, 206, 235, 0.3);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: rgba(240, 248, 255, 0.8);
+        }
+
+        .message {
+            margin: 10px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .message.user-message {
+            flex-direction: row-reverse;
+        }
+
+        .message .avatar {
+            min-width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #87ceeb, #ffffff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #2c3e50;
+            border: 1px solid #87ceeb;
+        }
+
+        .message.user-message .avatar {
+            background: linear-gradient(135deg, #add8e6, #e6f3ff);
+        }
+
+        .message .text {
+            background: rgba(135, 206, 235, 0.3);
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 250px;
+            word-wrap: break-word;
+            border: 1px solid rgba(135, 206, 235, 0.4);
+            color: #2c3e50;
+        }
+
+        .message.user-message .text {
+            background: rgba(173, 216, 230, 0.4);
+            border-color: rgba(173, 216, 230, 0.5);
+        }
+
+        .chat-input-container {
+            padding: 15px;
+            border-top: 1px solid rgba(135, 206, 235, 0.4);
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 0 0 13px 13px;
+        }
+
+        .chat-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #87ceeb;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #2c3e50;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: #5dade2;
+            box-shadow: 0 0 10px rgba(135, 206, 235, 0.3);
+        }
+
+        .chat-input::placeholder {
+            color: #5f6a6b;
+        }
+    </style>
+</head>
+<body>
+    <!-- 뒤로가기 버튼 -->
+    <button class="back-btn" onclick="goBackToVillage()">← 🏘️ 도깨비 마을로</button>
+    
+    <!-- 메인 캔버스 -->
+    <canvas id="floating-islands-canvas"></canvas>
+    
+    <!-- UI 컨테이너 -->
+    <div class="ui-container">
+        <!-- 상태 표시 -->
+        <div class="status-display" id="statusDisplay">
+            🏝️ 떠다니는 섬들에 오신 것을 환영합니다!
+        </div>
+        
+        <!-- 🏝️ 채팅 시스템 -->
+        <div class="chat-container" id="chatContainer">
+            <div class="chat-header">
+                <span id="chatTitle">🏝️ 하늘 도깨비와의 대화</span>
+                <button class="chat-close" onclick="closeChat()">×</button>
+            </div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input-container">
+                <input type="text" class="chat-input" id="chatInput" 
+                       placeholder="자연과 평화에 대해 질문해보세요..." 
+                       onkeypress="handleChatKeyPress(event)">
+            </div>
+        </div>
+        
+        <!-- 컨트롤 패널 -->
+        <div class="control-panel">
+            <h2 style="color: #2c3e50; margin-bottom: 15px; text-align: center;">🏝️ 떠다니는 섬들</h2>
+            
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: #2c3e50; margin-bottom: 10px; font-size: 16px;">🎮 컨트롤</h3>
+                <button class="control-btn" onclick="toggleAvatar()">👼 천사 아바타</button>
+                <button class="control-btn" onclick="resetCamera()">📷 카메라 리셋</button>
+                <button class="control-btn" onclick="toggleIsland()">☁️ 섬 변경</button>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: #2c3e50; margin-bottom: 10px; font-size: 16px;">☁️ 하늘 도깨비들</h3>
+                <div id="skyGoblinGrid">
+                    <!-- 하늘 도깨비들이 여기에 생성됩니다 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Three.js 및 GSAP 라이브러리 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+    <script>
+        // 🏝️ 떠다니는 섬들 전역 변수
+        let scene, camera, renderer, controls;
+        let currentChatGoblin = null; // 🏝️ 현재 채팅 중인 도깨비
+        let avatar = null;
+        let isSystemReady = false;
+        
+        // ☁️ 하늘의 도깨비들
+        const skyGoblins = [
+            { name: '☁️ 구름 조각가', specialty: '날씨 조절', description: '구름과 바람을 자유자재로 다루는 도깨비', emoji: '☁️', color: 0x87ceeb },
+            { name: '🌈 무지개 화가', specialty: '색채 마법', description: '하늘에 무지개를 그리는 예술가 도깨비', emoji: '🌈', color: 0xff69b4 },
+            { name: '⭐ 별빛 수집가', specialty: '천체 관측', description: '별들의 이야기를 들려주는 도깨비', emoji: '⭐', color: 0xffd700 },
+            { name: '🌙 달빛 수호자', specialty: '야간 보호', description: '밤하늘을 지키며 꿈을 보호하는 도깨비', emoji: '🌙', color: 0xe6e6fa },
+            { name: '🕊️ 바람 전령', specialty: '메시지 전달', description: '바람에 메시지를 실어 보내는 도깨비', emoji: '🕊️', color: 0xf0f8ff },
+            { name: '☀️ 태양 지킴이', specialty: '빛 관리', description: '태양의 빛을 조절하고 관리하는 도깨비', emoji: '☀️', color: 0xffa500 }
+        ];
+        
+        // 🎯 상태 업데이트 함수
+        function updateStatus(message) {
+            const statusElement = document.getElementById('statusDisplay');
+            if (statusElement) {
+                statusElement.textContent = message;
+            }
+        }
+        
+        // 🔙 도깨비 마을로 돌아가기
+        function goBackToVillage() {
+            updateStatus('🏘️ 도깨비 마을로 돌아가는 중...');
+            // GitHub Pages용 베이스 URL 계산
+            const baseURL = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/');
+            setTimeout(() => {
+                window.location.href = baseURL + 'index.html';
+            }, 1000);
+        }
+        
+        // 🎮 아바타 토글
+        function toggleAvatar() {
+            if (!avatar) {
+                createAvatar();
+            } else {
+                removeAvatar();
+            }
+        }
+        
+        // 👼 천사 아바타 생성
+        function createAvatar() {
+            avatar = new THREE.Group();
+            
+            // 천사 로브 (흰색)
+            const robeGeometry = new THREE.CylinderGeometry(0.5, 0.7, 2.2);
+            const robeMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xffffff,
+                shininess: 80
+            });
+            const robe = new THREE.Mesh(robeGeometry, robeMaterial);
+            robe.position.y = 1.1;
+            avatar.add(robe);
+            
+            // 천사 머리
+            const headGeometry = new THREE.SphereGeometry(0.5);
+            const headMaterial = new THREE.MeshPhongMaterial({ color: 0xf4d1ae });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 2.7;
+            avatar.add(head);
+            
+            // 후광
+            const haloGeometry = new THREE.RingGeometry(0.6, 0.8, 20);
+            const haloMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xffd700,
+                transparent: true,
+                opacity: 0.8,
+                side: THREE.DoubleSide
+            });
+            const halo = new THREE.Mesh(haloGeometry, haloMaterial);
+            halo.position.y = 3.5;
+            halo.rotation.x = -Math.PI / 2;
+            avatar.add(halo);
+            
+            // 천사 날개들
+            for (let i = 0; i < 2; i++) {
+                const wingGeometry = new THREE.PlaneGeometry(1.5, 2);
+                const wingMaterial = new THREE.MeshPhongMaterial({ 
+                    color: 0xffffff,
+                    transparent: true,
+                    opacity: 0.9,
+                    side: THREE.DoubleSide
+                });
+                const wing = new THREE.Mesh(wingGeometry, wingMaterial);
+                wing.position.set(i === 0 ? -1.2 : 1.2, 2, -0.3);
+                wing.rotation.y = i === 0 ? 0.3 : -0.3;
+                avatar.add(wing);
+                
+                // 날개 펄럭임
+                gsap.to(wing.rotation, {
+                    x: (i === 0 ? -0.2 : 0.2),
+                    duration: 1,
+                    repeat: -1,
+                    yoyo: true,
+                    ease: "sine.inOut"
+                });
+            }
+            
+            // 마법 지팡이
+            const staffGeometry = new THREE.CylinderGeometry(0.02, 0.02, 2);
+            const staffMaterial = new THREE.MeshPhongMaterial({ color: 0xffd700 });
+            const staff = new THREE.Mesh(staffGeometry, staffMaterial);
+            staff.position.set(0.8, 1.8, 0);
+            staff.rotation.z = 0.2;
+            avatar.add(staff);
+            
+            // 지팡이 끝의 별
+            const starGeometry = new THREE.SphereGeometry(0.15);
+            const starMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xffd700,
+                emissive: 0xffd700,
+                emissiveIntensity: 0.6
+            });
+            const star = new THREE.Mesh(starGeometry, starMaterial);
+            star.position.set(0.9, 2.8, 0);
+            avatar.add(star);
+            
+            // 천사 오라 (여러 겹의 빛 고리들)
+            for (let i = 0; i < 4; i++) {
+                const auraGeometry = new THREE.RingGeometry(0.8 + i * 0.3, 1.2 + i * 0.3, 16);
+                const auraMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0x87ceeb,
+                    transparent: true,
+                    opacity: 0.3 - i * 0.05,
+                    side: THREE.DoubleSide
+                });
+                const aura = new THREE.Mesh(auraGeometry, auraMaterial);
+                aura.rotation.x = -Math.PI / 2;
+                aura.position.y = 0.1;
+                avatar.add(aura);
+                
+                gsap.to(aura.rotation, {
+                    z: Math.PI * 2,
+                    duration: 8 - i * 0.5,
+                    repeat: -1,
+                    ease: "none"
+                });
+            }
+            
+            // 후광 회전
+            gsap.to(halo.rotation, {
+                z: Math.PI * 2,
+                duration: 10,
+                repeat: -1,
+                ease: "none"
+            });
+            
+            // 별 반짝임
+            gsap.to(star.scale, {
+                x: 1.5, y: 1.5, z: 1.5,
+                duration: 1,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            avatar.position.set(0, 0, 0);
+            scene.add(avatar);
+            
+            if (camera && controls) {
+                gsap.to(camera.position, {
+                    x: 6, y: 10, z: 15,
+                    duration: 1.5,
+                    ease: "power2.out"
+                });
+                gsap.to(controls.target, {
+                    x: 0, y: 1, z: 0,
+                    duration: 1.5,
+                    ease: "power2.out",
+                    onUpdate: () => controls.update()
+                });
+            }
+            
+            updateStatus('👼 천사 아바타가 하늘 모드로 활성화되었습니다!');
+        }
+        
+        // 👼 아바타 제거
+        function removeAvatar() {
+            if (avatar) {
+                while(avatar.children.length > 0) {
+                    const child = avatar.children[0];
+                    avatar.remove(child);
+                    if (child.geometry) child.geometry.dispose();
+                    if (child.material) child.material.dispose();
+                }
+                scene.remove(avatar);
+                avatar = null;
+                updateStatus('👋 천사 아바타가 하늘로 돌아갔습니다');
+            }
+        }
+        
+        // 📷 카메라 리셋
+        function resetCamera() {
+            if (camera && controls) {
+                gsap.to(camera.position, {
+                    x: 0, y: 25, z: 35,
+                    duration: 1.5,
+                    ease: "power2.out"
+                });
+                gsap.to(controls.target, {
+                    x: 0, y: 0, z: 0,
+                    duration: 1.5,
+                    ease: "power2.out",
+                    onUpdate: () => controls.update()
+                });
+                updateStatus('📷 카메라가 하늘 중앙으로 리셋되었습니다');
+            }
+        }
+        
+        // ☁️ 섬 변경
+        function toggleIsland() {
+            const islands = ['☁️ 구름 섬', '🌈 무지개 섬', '⭐ 별빛 섬', '🌙 달빛 섬', '☀️ 태양 섬'];
+            const randomIsland = islands[Math.floor(Math.random() * islands.length)];
+            updateStatus(`🏝️ 현재 위치: ${randomIsland}`);
+        }
+        
+        // 🏷️ 하늘 도깨비 이름표 생성
+        function createSkyGoblinNameTag(name, specialty) {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = 512;
+            canvas.height = 256;
+            
+            // 하늘 구름 배경
+            const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+            gradient.addColorStop(0.5, 'rgba(135, 206, 235, 0.9)');
+            gradient.addColorStop(1, 'rgba(176, 224, 230, 0.95)');
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 부드러운 테두리
+            context.strokeStyle = '#87ceeb';
+            context.lineWidth = 4;
+            context.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
+            
+            // 내부 테두리
+            context.strokeStyle = '#b0e0e6';
+            context.lineWidth = 2;
+            context.strokeRect(12, 12, canvas.width - 24, canvas.height - 24);
+            
+            // 이름 텍스트 (하늘색)
+            context.shadowColor = '#87ceeb';
+            context.shadowBlur = 8;
+            context.fillStyle = '#2c3e50';
+            context.font = 'bold 38px Arial';
+            context.textAlign = 'center';
+            context.fillText(name, canvas.width / 2, 80);
+            
+            // 전문 분야 텍스트
+            context.shadowBlur = 4;
+            context.fillStyle = '#34495e';
+            context.font = '26px Arial';
+            context.fillText(specialty, canvas.width / 2, 130);
+            
+            // 구름 장식 라인
+            context.shadowBlur = 0;
+            context.strokeStyle = '#87ceeb';
+            context.lineWidth = 2;
+            context.beginPath();
+            context.moveTo(60, 150);
+            context.lineTo(canvas.width - 60, 150);
+            context.stroke();
+            
+            // 구름들
+            context.fillStyle = '#ffffff';
+            for (let i = 0; i < 9; i++) {
+                const x = 60 + i * 50;
+                const y = 190;
+                
+                // 구름 모양 (여러 원들 조합)
+                context.beginPath();
+                context.arc(x - 15, y, 8, 0, Math.PI * 2);
+                context.arc(x, y - 5, 12, 0, Math.PI * 2);
+                context.arc(x + 15, y, 8, 0, Math.PI * 2);
+                context.arc(x, y + 5, 10, 0, Math.PI * 2);
+                context.fill();
+            }
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+            
+            const planeGeometry = new THREE.PlaneGeometry(4, 2);
+            const planeMaterial = new THREE.MeshBasicMaterial({ 
+                map: texture, 
+                transparent: true,
+                side: THREE.DoubleSide
+            });
+            
+            const nameTagMesh = new THREE.Mesh(planeGeometry, planeMaterial);
+            nameTagMesh.userData.isNameTag = true;
+            
+            return nameTagMesh;
+        }
+        
+        // ☁️ 3D 하늘 도깨비들 생성
+        function createSky3DGoblins() {
+            skyGoblins.forEach((goblin, index) => {
+                const goblin3D = createSky3DGoblin(goblin, index);
+                scene.add(goblin3D);
+            });
+        }
+        
+        // ☁️ 개별 3D 하늘 도깨비 생성
+        function createSky3DGoblin(goblinData, index) {
+            const goblinGroup = new THREE.Group();
+            
+            // 하늘 로브 몸체 (구름 같은 질감)
+            const bodyGeometry = new THREE.CylinderGeometry(0.8, 1.2, 2.5);
+            const bodyMaterial = new THREE.MeshPhongMaterial({ 
+                color: goblinData.color,
+                shininess: 60,
+                transparent: true,
+                opacity: 0.9
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 1.25;
+            goblinGroup.add(body);
+            
+            // 도깨비 머리
+            const headGeometry = new THREE.SphereGeometry(0.7);
+            const headMaterial = new THREE.MeshPhongMaterial({ color: 0xf4d1ae });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 3.2;
+            goblinGroup.add(head);
+            
+            // 하늘 모자 (구름 모양)
+            const hatGeometry = new THREE.SphereGeometry(0.9);
+            const hatMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0.8
+            });
+            const hat = new THREE.Mesh(hatGeometry, hatMaterial);
+            hat.position.y = 4;
+            hat.scale.y = 0.5;
+            goblinGroup.add(hat);
+            
+            // 작은 날개들
+            for (let i = 0; i < 2; i++) {
+                const wingGeometry = new THREE.PlaneGeometry(1, 1.5);
+                const wingMaterial = new THREE.MeshPhongMaterial({ 
+                    color: 0xffffff,
+                    transparent: true,
+                    opacity: 0.7,
+                    side: THREE.DoubleSide
+                });
+                const wing = new THREE.Mesh(wingGeometry, wingMaterial);
+                wing.position.set(i === 0 ? -1 : 1, 2.5, -0.2);
+                wing.rotation.y = i === 0 ? 0.2 : -0.2;
+                goblinGroup.add(wing);
+                
+                // 날개 펄럭임
+                gsap.to(wing.rotation, {
+                    x: (i === 0 ? -0.1 : 0.1),
+                    duration: 2 + i * 0.3,
+                    repeat: -1,
+                    yoyo: true,
+                    ease: "sine.inOut"
+                });
+            }
+            
+            // 떠다니는 구름들 (각 도깨비 주변)
+            for (let i = 0; i < 6; i++) {
+                const cloudGeometry = new THREE.SphereGeometry(0.3 + Math.random() * 0.2);
+                const cloudMaterial = new THREE.MeshPhongMaterial({ 
+                    color: 0xffffff,
+                    transparent: true,
+                    opacity: 0.6
+                });
+                const cloud = new THREE.Mesh(cloudGeometry, cloudMaterial);
+                
+                const angle = (i / 6) * Math.PI * 2;
+                cloud.position.set(
+                    Math.cos(angle) * 2.5,
+                    3 + Math.sin(i) * 1,
+                    Math.sin(angle) * 2.5
+                );
+                goblinGroup.add(cloud);
+                
+                // 구름 둥둥 떠다니기
+                gsap.to(cloud.position, {
+                    y: cloud.position.y + 1.5,
+                    duration: 4 + i * 0.5,
+                    repeat: -1,
+                    yoyo: true,
+                    ease: "sine.inOut"
+                });
+                
+                // 구름 회전
+                gsap.to(cloud.rotation, {
+                    y: Math.PI * 2,
+                    duration: 10 + i,
+                    repeat: -1,
+                    ease: "none"
+                });
+            }
+            
+            // 하늘 오라
+            const auraGeometry = new THREE.RingGeometry(3, 3.5, 20);
+            const auraMaterial = new THREE.MeshBasicMaterial({ 
+                color: goblinData.color,
+                transparent: true,
+                opacity: 0.2,
+                side: THREE.DoubleSide
+            });
+            const aura = new THREE.Mesh(auraGeometry, auraMaterial);
+            aura.rotation.x = -Math.PI / 2;
+            aura.position.y = 0.1;
+            goblinGroup.add(aura);
+            
+            // 이름표 추가
+            const nameTag = createSkyGoblinNameTag(goblinData.name, goblinData.specialty);
+            nameTag.position.set(0, 6.5, 0);
+            goblinGroup.add(nameTag);
+            
+            // 위치 설정 (각 도깨비마다 다른 높이의 떠다니는 섬)
+            const angle = (index / skyGoblins.length) * Math.PI * 2;
+            const radius = 25;
+            const x = Math.cos(angle) * radius;
+            const z = Math.sin(angle) * radius;
+            const y = 5 + index * 3; // 각기 다른 높이
+            goblinGroup.position.set(x, y, z);
+            
+            goblinGroup.lookAt(0, y, 0);
+            
+            goblinGroup.userData = {
+                goblinData: goblinData,
+                index: index,
+                isSkyGoblin: true
+            };
+            
+            // 하늘 애니메이션들
+            
+            // 전체 도깨비 둥둥 떠다니기
+            gsap.to(goblinGroup.position, {
+                y: y + Math.sin(index * 1.5) * 2,
+                duration: 8 + index * 0.5,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            // 오라 회전
+            gsap.to(aura.rotation, {
+                z: Math.PI * 2,
+                duration: 15 + index,
+                repeat: -1,
+                ease: "none"
+            });
+            
+            // 구름 모자 둥둥
+            gsap.to(hat.position, {
+                y: 4.3,
+                duration: 3,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            return goblinGroup;
+        }
+        
+        // ☁️ 하늘 도깨비 클릭 처리
+        function onFloatingIslandsCanvasClick(event) {
+            if (!camera || !scene) return;
+            
+            const rect = renderer.domElement.getBoundingClientRect();
+            const mouse = new THREE.Vector2();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(mouse, camera);
+            
+            const intersects = raycaster.intersectObjects(scene.children, true);
+            
+            if (intersects.length > 0) {
+                let clickedObject = intersects[0].object;
+                
+                while (clickedObject && !clickedObject.userData.isSkyGoblin) {
+                    clickedObject = clickedObject.parent;
+                }
+                
+                if (clickedObject && clickedObject.userData.isSkyGoblin) {
+                    const goblinData = clickedObject.userData.goblinData;
+                    selectSkyGoblin(goblinData);
+                    
+                    gsap.to(clickedObject.scale, {
+                        x: 1.2, y: 1.2, z: 1.2,
+                        duration: 0.2,
+                        yoyo: true,
+                        repeat: 1,
+                        ease: "power2.out"
+                    });
+                }
+            }
+        }
+        
+        // ☁️ 하늘 도깨비 카드 생성
+        function createSkyGoblinCards() {
+            const gridElement = document.getElementById('skyGoblinGrid');
+            
+            skyGoblins.forEach((goblin, index) => {
+                const card = document.createElement('div');
+                card.className = 'sky-goblin-card';
+                card.onclick = () => selectSkyGoblin(goblin);
+                
+                card.innerHTML = `
+                    <div class="goblin-name">${goblin.name}</div>
+                    <div class="goblin-specialty">${goblin.specialty}</div>
+                    <div style="font-size: 12px; color: #34495e;">${goblin.description}</div>
+                `;
+                
+                gridElement.appendChild(card);
+            });
+        }
+        
+        // ☁️ 하늘 도깨비 선택
+        function selectSkyGoblin(goblin) {
+            updateStatus(`☁️ ${goblin.name}과 하늘 여행을 시작합니다!`);
+            console.log('선택된 하늘 도깨비:', goblin);
+            
+            // 🏝️ 채팅 시스템 열기
+            openChat(goblin);
+            
+            setTimeout(() => {
+                updateStatus(`🌈 ${goblin.name}: "${goblin.description}"`);
+            }, 1500);
+        }
+
+        // 🏝️ 채팅 시스템 열기
+        function openChat(goblin) {
+            currentChatGoblin = goblin;
+            
+            const chatContainer = document.getElementById('chatContainer');
+            const chatTitle = document.getElementById('chatTitle');
+            const chatMessages = document.getElementById('chatMessages');
+            
+            chatTitle.textContent = `🏝️ ${goblin.name}과의 하늘 대화`;
+            chatMessages.innerHTML = `
+                <div class="message goblin-message">
+                    <div class="avatar">☁️</div>
+                    <div class="text">${goblin.name}: 안녕하세요! 떠다니는 섬들에 오신 것을 환영합니다. 하늘과 자연의 신비에 대해 이야기해봐요! 🌈✨</div>
+                </div>
+            `;
+            
+            chatContainer.style.display = 'flex';
+            document.getElementById('chatInput').focus();
+        }
+
+        // 🏝️ 채팅 시스템 닫기
+        function closeChat() {
+            document.getElementById('chatContainer').style.display = 'none';
+            currentChatGoblin = null;
+        }
+
+        // 🏝️ 채팅 입력 처리
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+
+        // 🏝️ 채팅 메시지 전송
+        function sendChatMessage() {
+            const chatInput = document.getElementById('chatInput');
+            const message = chatInput.value.trim();
+            
+            if (message && currentChatGoblin) {
+                const chatMessages = document.getElementById('chatMessages');
+                
+                // 사용자 메시지 추가
+                chatMessages.innerHTML += `
+                    <div class="message user-message">
+                        <div class="text">${message}</div>
+                        <div class="avatar">👤</div>
+                    </div>
+                `;
+                
+                // 도깨비 응답 생성
+                const response = generateSkyGoblinResponse(currentChatGoblin, message);
+                
+                setTimeout(() => {
+                    chatMessages.innerHTML += `
+                        <div class="message goblin-message">
+                            <div class="avatar">☁️</div>
+                            <div class="text">${currentChatGoblin.name}: ${response}</div>
+                        </div>
+                    `;
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }, 1000);
+                
+                chatInput.value = '';
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+
+        // 🏝️ 하늘 도깨비 AI 응답 생성
+        function generateSkyGoblinResponse(goblin, userMessage) {
+            const message = userMessage.toLowerCase();
+            
+            // 자연과 평화 분야별 전문 응답
+            if (goblin.name === '구름마법사') {
+                if (message.includes('구름') || message.includes('날씨') || message.includes('하늘')) {
+                    return "구름은 하늘의 예술가입니다! 수증기가 모여 만든 자연의 캔버스죠. 적운, 권운, 층운... 각각 다른 이야기를 들려준답니다. ☁️🎨";
+                } else if (message.includes('비') || message.includes('눈') || message.includes('바람')) {
+                    return "자연의 모든 기상 현상은 지구의 숨결입니다. 비는 생명을 키우고, 눈은 세상을 정화하며, 바람은 변화를 가져다줘요. 🌧️❄️💨";
+                } else if (message.includes('평화') || message.includes('명상')) {
+                    return "구름을 바라보며 마음의 평화를 찾아보세요. 떠다니는 구름처럼 생각도 자연스럽게 흘러가게 두는 것이 명상의 지혜입니다. 🧘‍♀️✨";
+                }
+            } else if (goblin.name === '바람요정') {
+                if (message.includes('바람') || message.includes('자유') || message.includes('여행')) {
+                    return "바람은 자유의 상징입니다! 국경도 벽도 넘나들며 세상 곳곳을 여행하죠. 바람의 속삭임에 귀 기울이면 자연의 메시지를 들을 수 있어요. 🍃🌍";
+                } else if (message.includes('씨앗') || message.includes('꽃가루')) {
+                    return "바람은 생명의 전령입니다. 씨앗과 꽃가루를 실어 나르며 새로운 생명이 태어날 곳을 찾아다녀요. 생명의 연결고리를 만드는 자연의 택배 서비스죠! 🌸🌱";
+                } else if (message.includes('에너지') || message.includes('친환경')) {
+                    return "풍력 에너지는 바람의 선물입니다! 깨끗하고 재생 가능한 에너지로 지구를 보호하는 데 도움을 줘요. 미래는 바람과 함께 할 거예요! 🌪️⚡";
+                }
+            } else if (goblin.name === '무지개수호자') {
+                if (message.includes('무지개') || message.includes('색깔') || message.includes('빛')) {
+                    return "무지개는 빛의 마법입니다! 일곱 가지 색깔이 조화롭게 어우러져 희망의 다리를 만들어요. 빨주노초파남보, 각 색깔마다 특별한 의미가 있답니다! 🌈✨";
+                } else if (message.includes('희망') || message.includes('꿈')) {
+                    return "무지개는 꿈과 희망의 상징입니다. 비 온 뒤 맑은 하늘에 나타나듯, 어려움 후에 찾아오는 기쁨을 의미해요. 여러분의 꿈도 무지개처럼 아름답게 펼쳐질 거예요! 🌟💫";
+                } else if (message.includes('프리즘') || message.includes('과학')) {
+                    return "무지개의 과학적 원리는 정말 신기해요! 빛의 굴절과 분산으로 백색광이 일곱 색으로 나뉘죠. 뉴턴이 프리즘으로 발견한 빛의 비밀이에요! 🔬🌈";
+                }
+            } else if (goblin.name === '별빛수집가') {
+                if (message.includes('별') || message.includes('밤하늘') || message.includes('우주')) {
+                    return "별빛은 우주에서 온 시간 여행자입니다! 몇 광년 전의 빛이 지금 우리 눈에 닿고 있어요. 밤하늘을 보는 것은 과거를 보는 것과 같답니다. ⭐🌌";
+                } else if (message.includes('소원') || message.includes('기원')) {
+                    return "별님에게 소원을 빌어보세요! 수천 년 동안 인류는 별을 보며 꿈과 희망을 키워왔어요. 여러분의 간절한 마음이 우주에 닿을 거예요. 🌟💫";
+                } else if (message.includes('천체관측') || message.includes('망원경')) {
+                    return "천체 관측은 우주와의 대화입니다! 망원경으로 달의 크레이터, 토성의 고리, 은하수를 관찰하면 우주의 신비로움에 감탄하게 될 거예요. 🔭✨";
+                }
+            } else if (goblin.name === '평화명상사') {
+                if (message.includes('평화') || message.includes('명상') || message.includes('마음')) {
+                    return "진정한 평화는 마음에서 시작됩니다. 호흡에 집중하고 현재 순간을 온전히 느껴보세요. 내면의 고요함이 바깥세상의 평화로 이어집니다. 🧘‍♀️🕊️";
+                } else if (message.includes('스트레스') || message.includes('걱정')) {
+                    return "스트레스와 걱정은 구름과 같아요. 잠시 하늘을 가리지만 결국 지나갑니다. 깊게 숨을 쉬고 이 순간에 머물러보세요. 모든 것이 변한다는 것을 기억하세요. 🌤️💙";
+                } else if (message.includes('감사') || message.includes('행복')) {
+                    return "감사는 행복의 열쇠입니다. 작은 것에서도 감사를 찾는 마음이 일상을 기적으로 바꿔줘요. 지금 이 순간, 숨 쉴 수 있음에 감사해보세요. 🙏✨";
+                }
+            } else if (goblin.name === '자연치유사') {
+                if (message.includes('자연') || message.includes('치유') || message.includes('힐링')) {
+                    return "자연은 최고의 치유사입니다! 숲의 피톤치드, 바다의 음이온, 산의 맑은 공기가 몸과 마음을 치유해줘요. 자연과 함께하는 시간을 늘려보세요. 🌿💚";
+                } else if (message.includes('스트레스') || message.includes('피로')) {
+                    return "도시의 피로를 자연이 씻어드릴게요. 맨발로 흙을 밟고, 나무에 기대어 쉬고, 새소리에 귀 기울여보세요. 자연의 리듬이 여러분을 재충전해줄 거예요. 🌳🦋";
+                } else if (message.includes('환경') || message.includes('보호')) {
+                    return "자연을 보호하는 것은 우리 자신을 보호하는 것입니다. 작은 실천부터 시작해보세요. 일회용품 줄이기, 분리수거, 대중교통 이용... 지구가 고마워할 거예요! 🌍💚";
+                }
+            }
+            
+            // 일반적인 자연과 평화 응답
+            const generalResponses = [
+                `${goblin.name}이 ${goblin.description.slice(0, 50)}... 자연의 신비에 대해 더 궁금한 것이 있으신가요? 🏝️✨`,
+                "하늘 위 떠다니는 섬에서는 모든 것이 평화롭고 아름답습니다. 마음의 평안을 찾아보세요. ☁️💙",
+                "자연의 리듬에 맞춰 천천히 살아가는 것이 진정한 지혜입니다. 서두르지 말고 지금을 즐겨보세요. 🌿⏰",
+                "바람과 구름이 전하는 메시지에 귀 기울여보세요. 자연은 항상 우리에게 소중한 가르침을 주고 있어요. 🍃💫",
+                "평화로운 마음으로 세상을 바라보면 모든 것이 아름답게 보입니다. 긍정의 에너지를 나누어봐요! ✨🌈"
+            ];
+            
+            return generalResponses[Math.floor(Math.random() * generalResponses.length)];
+        }
+        
+        // 🏝️ 떠다니는 섬들 환경 생성
+        function createFloatingIslandsEnvironment() {
+            // 🏝️ 떠다니는 섬들
+            for (let i = 0; i < 15; i++) {
+                createFloatingIsland();
+            }
+            
+            // ☁️ 구름들
+            for (let i = 0; i < 40; i++) {
+                createFloatingCloud();
+            }
+            
+            // 🌈 무지개
+            for (let i = 0; i < 3; i++) {
+                createRainbow();
+            }
+            
+            // ☀️ 하늘 조명
+            createSkyLighting();
+        }
+        
+        // 🏝️ 떠다니는 섬 생성
+        function createFloatingIsland() {
+            const islandGroup = new THREE.Group();
+            
+            // 섬 토대 (아래쪽이 좁은 역원뿔 모양)
+            const baseGeometry = new THREE.ConeGeometry(3 + Math.random() * 2, 4, 8);
+            const baseMaterial = new THREE.MeshPhongMaterial({ color: 0x8b4513 });
+            const base = new THREE.Mesh(baseGeometry, baseMaterial);
+            base.position.y = -2;
+            islandGroup.add(base);
+            
+            // 섬 표면 (잔디)
+            const surfaceGeometry = new THREE.CylinderGeometry(3 + Math.random() * 2, 3 + Math.random() * 2, 0.5);
+            const surfaceMaterial = new THREE.MeshPhongMaterial({ color: 0x228b22 });
+            const surface = new THREE.Mesh(surfaceGeometry, surfaceMaterial);
+            surface.position.y = 0;
+            islandGroup.add(surface);
+            
+            // 나무들
+            for (let j = 0; j < 3 + Math.random() * 3; j++) {
+                const treeGroup = new THREE.Group();
+                
+                // 나무 줄기
+                const trunkGeometry = new THREE.CylinderGeometry(0.1, 0.15, 1.5);
+                const trunkMaterial = new THREE.MeshPhongMaterial({ color: 0x654321 });
+                const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+                trunk.position.y = 0.75;
+                treeGroup.add(trunk);
+                
+                // 나무 잎
+                const leavesGeometry = new THREE.SphereGeometry(0.8);
+                const leavesMaterial = new THREE.MeshPhongMaterial({ color: 0x32cd32 });
+                const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
+                leaves.position.y = 1.8;
+                treeGroup.add(leaves);
+                
+                const angle = (j / 6) * Math.PI * 2;
+                treeGroup.position.set(
+                    Math.cos(angle) * (1 + Math.random()),
+                    0.2,
+                    Math.sin(angle) * (1 + Math.random())
+                );
+                islandGroup.add(treeGroup);
+            }
+            
+            // 꽃들
+            for (let j = 0; j < 5; j++) {
+                const flowerGeometry = new THREE.SphereGeometry(0.1);
+                const flowerColors = [0xff69b4, 0xff6347, 0xffd700, 0x9370db, 0x00ff7f];
+                const flowerMaterial = new THREE.MeshPhongMaterial({ 
+                    color: flowerColors[Math.floor(Math.random() * flowerColors.length)]
+                });
+                const flower = new THREE.Mesh(flowerGeometry, flowerMaterial);
+                flower.position.set(
+                    (Math.random() - 0.5) * 4,
+                    0.3,
+                    (Math.random() - 0.5) * 4
+                );
+                islandGroup.add(flower);
+            }
+            
+            const x = (Math.random() - 0.5) * 120;
+            const y = 5 + Math.random() * 20;
+            const z = (Math.random() - 0.5) * 120;
+            islandGroup.position.set(x, y, z);
+            
+            // 섬 둥둥 떠다니기
+            gsap.to(islandGroup.position, {
+                y: y + (Math.random() - 0.5) * 4,
+                duration: 8 + Math.random() * 4,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            // 섬 천천히 회전
+            gsap.to(islandGroup.rotation, {
+                y: Math.PI * 2,
+                duration: 60 + Math.random() * 30,
+                repeat: -1,
+                ease: "none"
+            });
+            
+            scene.add(islandGroup);
+        }
+        
+        // ☁️ 떠다니는 구름 생성
+        function createFloatingCloud() {
+            const cloudGroup = new THREE.Group();
+            
+            // 구름 주요 부분들 (여러 구체 조합)
+            for (let i = 0; i < 4 + Math.random() * 3; i++) {
+                const cloudGeometry = new THREE.SphereGeometry(0.8 + Math.random() * 0.6);
+                const cloudMaterial = new THREE.MeshPhongMaterial({ 
+                    color: 0xffffff,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const cloudPart = new THREE.Mesh(cloudGeometry, cloudMaterial);
+                cloudPart.position.set(
+                    (Math.random() - 0.5) * 3,
+                    (Math.random() - 0.5) * 0.5,
+                    (Math.random() - 0.5) * 3
+                );
+                cloudGroup.add(cloudPart);
+            }
+            
+            const x = (Math.random() - 0.5) * 150;
+            const y = 10 + Math.random() * 15;
+            const z = (Math.random() - 0.5) * 150;
+            cloudGroup.position.set(x, y, z);
+            
+            // 구름 천천히 이동
+            gsap.to(cloudGroup.position, {
+                x: x + (Math.random() - 0.5) * 50,
+                z: z + (Math.random() - 0.5) * 50,
+                duration: 20 + Math.random() * 10,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            // 구름 크기 변화 (부풀어오르기)
+            gsap.to(cloudGroup.scale, {
+                x: 1.2, y: 1.2, z: 1.2,
+                duration: 5 + Math.random() * 3,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+            
+            scene.add(cloudGroup);
+        }
+        
+        // 🌈 무지개 생성
+        function createRainbow() {
+            const rainbowGroup = new THREE.Group();
+            const colors = [0xff0000, 0xff7f00, 0xffff00, 0x00ff00, 0x0000ff, 0x4b0082, 0x9400d3];
+            
+            for (let i = 0; i < colors.length; i++) {
+                const ringGeometry = new THREE.RingGeometry(20 + i * 2, 22 + i * 2, 32, 1, 0, Math.PI);
+                const ringMaterial = new THREE.MeshBasicMaterial({ 
+                    color: colors[i],
+                    transparent: true,
+                    opacity: 0.6,
+                    side: THREE.DoubleSide
+                });
+                const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+                ring.rotation.z = Math.PI;
+                rainbowGroup.add(ring);
+            }
+            
+            const angle = (Math.PI * 2 / 3) * (scene.children.filter(child => 
+                child.userData && child.userData.isRainbow).length);
+            const x = Math.cos(angle) * 60;
+            const z = Math.sin(angle) * 60;
+            rainbowGroup.position.set(x, 15, z);
+            rainbowGroup.lookAt(0, 15, 0);
+            
+            rainbowGroup.userData.isRainbow = true;
+            
+            // 무지개 색상 변화
+            gsap.to(rainbowGroup.children, {
+                opacity: 0.3,
+                duration: 4,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut",
+                stagger: 0.2
+            });
+            
+            scene.add(rainbowGroup);
+        }
+        
+        // ☀️ 하늘 조명
+        function createSkyLighting() {
+            const ambientLight = new THREE.AmbientLight(0x87ceeb, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(50, 50, 50);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+            
+            // 부드러운 하늘빛들
+            for (let i = 0; i < 6; i++) {
+                const skyLight = new THREE.PointLight(0x87ceeb, 0.4, 40);
+                skyLight.position.set(
+                    Math.cos(i) * 50,
+                    25,
+                    Math.sin(i) * 50
+                );
+                scene.add(skyLight);
+            }
+        }
+        
+        // 🏝️ 떠다니는 섬들 초기화
+        function initFloatingIslands() {
+            console.log('🏝️ 떠다니는 섬들 초기화 시작...');
+            
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87ceeb);
+            
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 25, 35);
+            
+            const canvas = document.getElementById('floating-islands-canvas');
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            
+            // 🏝️ 떠다니는 섬들 환경 생성
+            createFloatingIslandsEnvironment();
+            
+            // ☁️ 3D 하늘 도깨비들 생성
+            createSky3DGoblins();
+            
+            // ☁️ 하늘 도깨비 카드 생성
+            createSkyGoblinCards();
+            
+            // 🖱️ 캔버스 클릭 이벤트 추가
+            canvas.addEventListener('click', onFloatingIslandsCanvasClick);
+            
+            isSystemReady = true;
+            updateStatus('🏝️ 떠다니는 섬들이 완성되었습니다! 하늘 세계를 탐험하세요!');
+            
+            animate();
+        }
+        
+        // 🎬 애니메이션 루프
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (controls) {
+                controls.update();
+            }
+            
+            if (avatar && controls) {
+                controls.target.copy(avatar.position);
+                controls.target.y += 1;
+            }
+            
+            // 🏷️ 모든 이름표들이 카메라를 바라보도록 업데이트
+            scene.traverse((object) => {
+                if (object.userData && object.userData.isNameTag && camera) {
+                    object.lookAt(camera.position);
+                }
+            });
+            
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+        
+        // 📱 윈도우 리사이즈 처리
+        window.addEventListener('resize', () => {
+            if (camera && renderer) {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        });
+        
+        // 🚀 떠다니는 섬들 시작
+        window.addEventListener('load', () => {
+            initFloatingIslands();
+        });
+    </script>
+</body>
+</html>
